@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    gap: 24,
+    gap: 20,
   },
   profileSection: {
     flexDirection: 'row',
@@ -244,50 +244,15 @@ export default function ProfileScreen({
     }
   }
 
-
-//   const withDrawMember = async () => {
-//   try {
-//     //const headers = await authHeader();
-//     const res = await api.delete('/auth/withdraw', { 
-//         headers: {
-//           Authorization: `Bearer ${getAccessToken}`, 
-//           'Content-Type': 'application/json'}}
-//         );
-//     clearTokens();
-//     console.log('회원 탈퇴 성공:', res.data);
-//     // TODO: onNavigateToLogin?.(); 등 후처리
-//   } catch (error) {
-//     console.error('회원 탈퇴 실패:', error);
-//     Alert.alert('탈퇴 실패', '연관 데이터 정리 후 다시 시도해 주세요.'); // 서버가 409 주면 그 메시지 표시 추천
-//   }
-// };
-
-// const logoutMember = async () => {
-//   try {
-//     //const headers = await authHeader();
-//     await api.post('/auth/logout', {}, { 
-//         headers: {
-//           Authorization: `Bearer ${getAccessToken}`, 
-//           'Content-Type': 'application/json'}}
-//         );
-//     clearTokens();
-//     console.log('회원 로그아웃 완료');
-//   } catch {
-//     console.log('회원 로그아웃 실패');
-//   }
-// };
-
-
   interface user { // api 명세에 맞게 수정
     id : number;
     name : string;
     email : string;
-    birthDate : string | null;
-    gender : Gender;
-    socialType : SocialType;
+    birthDate : string | null;  // 04-19 (월-일) 형식
+    gender : string; // 나중에 enum으로 변경
+    socialId : string;
     isCompleted : Boolean;
     ocrValidation : Boolean;
-    isHost : Boolean;
   };
 
   interface stats {
@@ -309,7 +274,9 @@ export default function ProfileScreen({
 
   const fetchMyInfo = async () => {
     try {
+      console.log('프로필 정보 호출 시작');
       const res = await api.get('/auth'); 
+      console.log('api 호출됨')
       if (!cancelled) setUserInfo(res.data?.data);
       console.log(res);
     } catch (error) {
@@ -338,9 +305,6 @@ export default function ProfileScreen({
   //   }
   // ), []; 
   
-  
-
-
   return (
     <View style={styles.container}>
       {/* 헤더 */}
@@ -365,11 +329,12 @@ export default function ProfileScreen({
               <View style={styles.profileInfo}>
                 <Text style={styles.userName}>{userInfo?.name}</Text>
                 <Text style={styles.userEmail}>{userInfo?.email}</Text>
-                <Text style={styles.userDetails}>{ageText} • {userInfo?.gender}</Text>
+                <Text style={styles.userDetails}>{`나이 : 출생년도/${userInfo.birthDate}`} • {userInfo?.gender == 'F' ? '여성' : '남성'}</Text>
+                <View></View>
                 <Badge variant="default" style={styles.verificationBadge}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Ionicons name="checkmark-circle" size={14} color="#10b981" />
-                    <Text style={{ color: '#10b981', fontSize: 12 }}>{userInfo?.verificationStatus}</Text>
+                    <Ionicons name="checkmark-circle" size={14} color="#baecdbff" />
+                    <Text style={{ color: 'white', fontSize: 12 }}>{userInfo?.ocrValidation==true ? '신분증 인증완료' : '신분증 미인증'}</Text>
                   </View>
                 </Badge>
               </View>
@@ -394,7 +359,7 @@ export default function ProfileScreen({
         </Card>
 
         {/* 메뉴 */}
-        <Card>
+        <Card style={{ marginTop: 20 }}>
           <CardContent style={{ padding: 0 }}>
             <TouchableOpacity 
             style={styles.menuItem} onPress={onNavigateToPublicProfile}>
@@ -433,7 +398,7 @@ export default function ProfileScreen({
         </Card>
 
         {/* 계정 관리 */}
-        <Card>
+        <Card style={{ marginTop: 20 }}>
           <CardContent style={{ padding: 0 }}>
             <TouchableOpacity style={styles.logoutButton} onPress={handleLogoutClick}>
               <Ionicons name="log-out" size={20} color="#6b7280" />
