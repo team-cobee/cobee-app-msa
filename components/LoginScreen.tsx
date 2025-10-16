@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { api, BASE_URL } from '@/api/api';
+import { api, BASE_URL, DEV_HOST } from '@/api/api';
 import { saveTokens, getAccessToken, getRefreshToken } from '@/api/tokenStorage';
 
 interface LoginScreenProps {
@@ -35,7 +35,7 @@ export default function LoginScreen({ onSkip, onSignup }: LoginScreenProps) {
   const webRef = useRef<WebView>(null);
 
   // ✅ 백엔드 콜백 (카카오 콘솔에도 동일 문자열로 등록되어야 합니다)
-  const redirectUri = `${BASE_URL}/oauth2/callback?mode=api`;
+  const redirectUri = `${DEV_HOST}/oauth2/callback?mode=api`;
 
   // ① 모든 페이지 로드 후 1차 자동 추출 스크립트 (섞인 텍스트에서도 첫 JSON만 보냄)
   const INJECT_AFTER_LOAD = `
@@ -72,20 +72,13 @@ export default function LoginScreen({ onSkip, onSignup }: LoginScreenProps) {
 
   const allowedTopNavPrefixes = [
     BASE_URL,
-    'https://kauth.kakao.com',
-    'https://accounts.kakao.com',
-    'https://accounts.google.com',
+    'http:172.20.5.74:8080/oauth2/authorization/naver'
   ];
 
-  // 카카오/구글 로그인 시작
-  const openKakao = () => {
-    const authUrl = `${BASE_URL}/oauth2/authorization/kakao?redirect_uri=${encodeURIComponent(redirectUri)}`;
+  const openNaver = () => {
+    const authUrl = `${DEV_HOST}/oauth2/authorization/naver`;
     setWebUrl(authUrl);
-  };
-  const openGoogle = () => {
-    const authUrl = `${BASE_URL}/oauth2/authorization/google?redirect_uri=${encodeURIComponent(redirectUri)}`;
-    setWebUrl(authUrl);
-  };
+  }
 
   // 네비게이션 변화마다 콜백 URL이면 2차 주입 (약간의 지연을 줘 DOM 준비 보장)
   const onNavChange = useCallback((nav: any) => {
@@ -133,11 +126,11 @@ export default function LoginScreen({ onSkip, onSignup }: LoginScreenProps) {
   // localhost 리다이렉트 방지
   const onShouldStartLoadWithRequest = useCallback((req: any) => {
     const url: string = req?.url ?? '';
-    if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) {
-      Alert.alert('로그인 오류', '앱에서 localhost로 리다이렉트되었습니다. 서버 설정을 확인해주세요.');
-      setWebUrl(null);
-      return false;
-    }
+    // if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) {
+    //   Alert.alert('로그인 오류', '앱에서 localhost로 리다이렉트되었습니다. 서버 설정을 확인해주세요.');
+    //   setWebUrl(null);
+    //   return false;
+    // }
     if (url.startsWith(redirectUri)) return true;
     if (allowedTopNavPrefixes.some(p => url.startsWith(p))) return true;
     return true;
@@ -154,12 +147,8 @@ export default function LoginScreen({ onSkip, onSignup }: LoginScreenProps) {
       </View>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={openKakao} activeOpacity={0.8}>
-          <Image source={require('../assets/images/kakao-login.png')} style={styles.kakaoLoginButton} />
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={openGoogle} activeOpacity={0.8}>
-          <Image source={require('../assets/images/google-login.png')} style={styles.googleLoginButton} />
+        <TouchableOpacity onPress={openNaver} activeOpacity={0.8}>
+          <Image source={require('../assets/images/naverLogin.png')} style={styles.kakaoLoginButton} />
         </TouchableOpacity>
 
         <View style={styles.skipContainer}>

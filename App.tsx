@@ -24,7 +24,7 @@ const CreateJobPosting = lazy(() => import('./components/CreateJobPosting'));
 const JobPostingCompleteScreen = lazy(() => import('./components/JobPostingCompleteScreen'));
 const MatchingStatusScreen = lazy(() => import('./components/MatchingStatusScreen'));
 const BookmarkListScreen = lazy(() => import('./components/BookmarkListScreen'));
-const ProfileEditScreen = lazy(() => import('./components/ProfileEditScreen'));
+//const ProfileEditScreen = lazy(() => import('./components/ProfileEditScreen'));
 const SearchScreen = lazy(() => import('./components/SearchScreen'));
 const MyPostsScreen = lazy(() => import('./components/MyPostsScreen'));
 const ApplicantsScreen = lazy(() => import('./components/ApplicantsScreen'));
@@ -146,8 +146,8 @@ export default function App() {
           />
         );
 
-      case 'ProfileEdit':
-        return <ProfileEditScreen onBack={goBack} onSave={goBack} />;
+      // case 'ProfileEdit':
+      //   return <ProfileEditScreen onBack={goBack} onSave={goBack} />;
 
       case 'PublicProfileEdit':
         return <PublicProfileEditScreen onBack={goBack} onSave={goBack} />;
