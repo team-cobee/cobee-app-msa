@@ -16,7 +16,7 @@
 //api.ts - 소셜 연동됐을떄 경우 
 import axios, { AxiosError, AxiosHeaders, InternalAxiosRequestConfig } from 'axios';
 import { getAccessToken, getRefreshToken, saveTokens, clearTokens } from './tokenStorage';
-export const DEV_HOST = 'http://172.20.5.74:8080';
+export const DEV_HOST = 'http://:8080';
 export const BASE_URL = 'http://localhost:8080';
 export const OCR_URL = "https://qwen-vl-service-108875465480.asia-southeast1.run.app";
 

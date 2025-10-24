@@ -1,33 +1,3 @@
-// export enum Snoring {
-//     Snore = 'SNORE',
-//     NoSnore = 'NO_SNORE',
-//     Impossible = 'IMPOSSIBLE',
-//     None = 'NONE'
-// }
-
-// export enum Smoking {
-//     Smoke = 'SMOKE',
-//     NotSmoke = 'NOT_SMOKE',
-//     Impossible = 'IMPOSSIBLE',
-//     None = 'NONE'
-// }
-// types/enums.ts 파일에서
-  export enum Smoking {
-    Impossible = "IMPOSSIBLE",  // 기존: NotSmoke
-    None = "NONE"               // 기존: Smoke  
-  }
-
-  export enum Snoring {
-    Impossible = "IMPOSSIBLE",  // 기존: NoSnore
-    None = "NONE"               // 기존: Snore
-  }
-
-  export enum Pets {
-    Possible = "POSSIBLE",      // 기존: Have
-    Impossible = "IMPOSSIBLE",  // 기존: NotHave  
-    None = "NONE"               // 새로 추가
-  }
-
 export enum Gender {
   Male = "MALE",
   Female = "FEMALE",
@@ -36,23 +6,13 @@ export enum Gender {
 
 export enum Lifestyle {
   Morning = "MORNING",
-  Evening = "NIGHT",
-  None = "NONE"
+  Evening = "EVENING",
 }
 
 export enum Personality {
   Introvert = 'INTROVERT',
   Extrovert = 'EXTROVERT',
-  None = 'NONE'
 }
-
-// export enum Pets {
-//   Have = 'HAVE',
-//   NotHave = 'NOT_HAVE',
-//   Possible = 'POSSIBLE',
-//   Impossible = 'IMPOSSIBLE',
-//   None = 'NONE'
-// }
 
 export enum MatchStatus {
   OnWait = 'ON_WAIT',
@@ -68,8 +28,7 @@ export enum RecruitStatus {
 }
 
 export enum SocialType {
-    Kakao = 'KAKAO',
-    Google = 'GOOGLE'
+    Kakao = 'KAKAO'
 }
 
 export enum MessageType {
