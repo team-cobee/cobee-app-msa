@@ -1,4 +1,4 @@
-import { Gender, MatchStatus, Lifestyle, Snoring, Smoking, Personality, Pets } from '@/types/enums';
+import { Gender, MatchStatus, Lifestyle, Personality} from '@/types/enums';
 import React, { useState } from 'react';
 import { AddressResult } from '../components/AddressSearchModal';
 import AddressSearchModal from '../components/AddressSearchModal';
@@ -21,8 +21,8 @@ const toPersonalityEnum = (v: string) =>
   v === 'introvert' ? 'INTROVERT' : v === 'extrovert' ? 'EXTROVERT' : 'NONE';
 const toSmokingEnum = (v: string) => {
   switch (v) {
-    case 'impossible': return 'IMPOSSIBLE';
-    case 'none': return 'NONE';
+    case 'impossible': return false;
+    case 'none': return true;
     default: return 'NONE';
   }
 };
@@ -53,9 +53,9 @@ type RecruitRequest = {
   maxAge: number;
   lifestyle: Lifestyle
   personality: Personality
-  isSmoking: Smoking
-  isSnoring: Snoring
-  isPetsAllowed: Pets
+  isSmoking: boolean
+  isSnoring: boolean
+  isPetsAllowed: boolean
   hasRoom: boolean;
   imgUrl: string[];
   address: string;

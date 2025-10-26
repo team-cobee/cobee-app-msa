@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy } from 'react';
+import { useEffect, useState, Suspense, lazy } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,19 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+import * as Notifications from 'expo-notifications';
+
+import { useFcmToken } from './hooks/useFcmToken';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 
 // Lazy loaded components for dynamic rendering
 const HomeScreen = lazy(() => import('./components/HomeScreen'));
@@ -61,6 +74,31 @@ export default function App() {
   
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const {
+    fcmToken,
+    error: fcmError,
+    permissionStatus,
+    refreshToken: refreshFcmToken,
+  } = useFcmToken({ enabled: isLoggedIn, autoRegister: false });
+
+  useEffect(() => {
+    if (fcmToken) {
+      console.log('[Notifications] FCM token issued:', `${fcmToken.slice(0, 12)}...`);
+    }
+  }, [fcmToken]);
+
+  useEffect(() => {
+    if (fcmError) {
+      console.warn('[Notifications] FCM token error:', fcmError);
+    }
+  }, [fcmError]);
+
+  useEffect(() => {
+    if (permissionStatus && permissionStatus !== Notifications.PermissionStatus.GRANTED) {
+      console.warn('[Notifications] Current permission status:', permissionStatus);
+    }
+  }, [permissionStatus]);
+
 
   // 채팅
   const [chatRoomState, setChatRoomState] = useState({
@@ -90,7 +128,9 @@ export default function App() {
   const handleLogin = () => {
     setIsLoggedIn(true);
     setCurrentRoute({ screen: 'Main' });
+    refreshFcmToken();
   };
+
 
   const handleLogout = () => {
     setIsLoggedIn(false);
