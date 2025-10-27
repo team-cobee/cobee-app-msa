@@ -23,21 +23,18 @@ const toSmokingEnum = (v: string) => {
   switch (v) {
     case 'impossible': return false;
     case 'none': return true;
-    default: return 'NONE';
   }
 };
 const toSnoringEnum = (v: string) => {
   switch (v) {
-    case 'impossible': return 'IMPOSSIBLE';
-    case 'none': return 'NONE';
-    default: return 'NONE';
+    case 'impossible': return false;
+    case 'none': return true;
   }
 };
 const toPetsEnum = (v: string) => {
   switch (v) {
-    case 'possible': return 'POSSIBLE';
-    case 'impossible': return 'IMPOSSIBLE';
-    default: return 'NONE';
+    case 'possible': return true;
+    case 'impossible': return false;
   }
 };
 
@@ -169,7 +166,7 @@ const handleAddressSelect = (addr: AddressResult) => {
   setFormData((prev) => ({ 
     ...prev, 
     address: addr.fullAddress 
-  })); // ✅ input 값 자동완성
+  })); 
   
   console.log('formData.address 업데이트됨:', addr.fullAddress);
 };

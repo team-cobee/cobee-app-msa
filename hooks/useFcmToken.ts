@@ -20,8 +20,8 @@ interface UseFcmTokenResult {
 const resolveProjectId = () => {
   const expoProjectId =
     Constants?.expoConfig?.extra?.eas?.projectId ||
-    Constants?.easConfig?.projectId ||
-    Constants?.expoConfig?.projectId;
+    Constants?.easConfig?.projectId 
+    //Constants?.expoConfig?.projectId;
 
   return (FCM_PROJECT_ID || expoProjectId || '').trim();
 };
@@ -77,7 +77,7 @@ export const useFcmToken = (options: UseFcmTokenOptions = {}): UseFcmTokenResult
         throw new Error('FCM 토큰을 발급하려면 EAS projectId 또는 FCM_PROJECT_ID가 필요합니다.');
       }
 
-      const devicePushToken = await Notifications.getDevicePushTokenAsync({ projectId });
+      const devicePushToken = await Notifications.getDevicePushTokenAsync();
 
       setFcmToken(devicePushToken.data);
     } catch (err) {
