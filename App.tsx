@@ -1,4 +1,5 @@
-import { useState, Suspense, lazy } from 'react';
+import { useEffect, useState, Suspense, lazy } from 'react';
+import { Platform } from 'react-native';
 import {
   View,
   Text,
@@ -11,6 +12,33 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import * as Notifications from 'expo-notifications';
+
+import { useFcmToken } from './hooks/useFcmToken';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
+const MapScreen = lazy(() => {
+  // 웹(Web) 플랫폼일 경우: Placeholder 파일을 로드
+  if (Platform.OS === 'web') {
+    // MapScreen.web.tsx 파일을 직접 임포트
+    return import('./components/MapScreen.web'); 
+  }
+  // 그 외(iOS, Android) 플랫폼일 경우: 네이티브 맵 파일을 로드
+  else {
+    // MapScreen.native.tsx 파일을 직접 임포트
+    return import('./components/MapScreen.native');
+  }
+});
+
 // Lazy loaded components for dynamic rendering
 const HomeScreen = lazy(() => import('./components/HomeScreen'));
 const JobPostingDetail = lazy(() => import('./components/JobPostingDetail'));
@@ -18,7 +46,7 @@ const ChatScreen = lazy(() => import('./components/ChatScreen'));
 const ProfileScreen = lazy(() => import('./components/ProfileScreen'));
 const LoginScreen = lazy(() => import('./components/LoginScreen'));
 const SignupScreen = lazy(() => import('./components/SignupScreen'));
-const MapScreen = lazy(() => import('./components/MapScreen'));
+//const MapScreen = lazy(() => import('./components/MapScreen.native'));
 const NotificationScreen = lazy(() => import('./components/NotificationScreen'));
 const CreateJobPosting = lazy(() => import('./components/CreateJobPosting'));
 const JobPostingCompleteScreen = lazy(() => import('./components/JobPostingCompleteScreen'));
@@ -61,6 +89,26 @@ export default function App() {
   
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { token, ready, error } = useFcmToken('1'); 
+
+  useEffect(() => {
+    if (token) {
+      console.log('[Notifications] FCM token issued:', `${token.slice(0, 12)}...`);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (token) {
+      //console.warn('[Notifications] FCM token error:', fcmError);
+    }
+  }, [token]);
+
+  // useEffect(() => {
+  //   if (permissionStatus && permissionStatus !== Notifications.PermissionStatus.GRANTED) {
+  //     console.warn('[Notifications] Current permission status:', permissionStatus);
+  //   }
+  // }, [permissionStatus]);
+
 
   // 채팅
   const [chatRoomState, setChatRoomState] = useState({
@@ -90,7 +138,9 @@ export default function App() {
   const handleLogin = () => {
     setIsLoggedIn(true);
     setCurrentRoute({ screen: 'Main' });
+   // refreshFcmToken();
   };
+
 
   const handleLogout = () => {
     setIsLoggedIn(false);

@@ -1,4 +1,4 @@
-import { Gender, MatchStatus, Lifestyle, Snoring, Smoking, Personality, Pets } from '@/types/enums';
+import { Gender, MatchStatus, Lifestyle, Personality} from '@/types/enums';
 import React, { useState } from 'react';
 import { AddressResult } from '../components/AddressSearchModal';
 import AddressSearchModal from '../components/AddressSearchModal';
@@ -21,23 +21,20 @@ const toPersonalityEnum = (v: string) =>
   v === 'introvert' ? 'INTROVERT' : v === 'extrovert' ? 'EXTROVERT' : 'NONE';
 const toSmokingEnum = (v: string) => {
   switch (v) {
-    case 'impossible': return 'IMPOSSIBLE';
-    case 'none': return 'NONE';
-    default: return 'NONE';
+    case 'impossible': return false;
+    case 'none': return true;
   }
 };
 const toSnoringEnum = (v: string) => {
   switch (v) {
-    case 'impossible': return 'IMPOSSIBLE';
-    case 'none': return 'NONE';
-    default: return 'NONE';
+    case 'impossible': return false;
+    case 'none': return true;
   }
 };
 const toPetsEnum = (v: string) => {
   switch (v) {
-    case 'possible': return 'POSSIBLE';
-    case 'impossible': return 'IMPOSSIBLE';
-    default: return 'NONE';
+    case 'possible': return true;
+    case 'impossible': return false;
   }
 };
 
@@ -53,9 +50,9 @@ type RecruitRequest = {
   maxAge: number;
   lifestyle: Lifestyle
   personality: Personality
-  isSmoking: Smoking
-  isSnoring: Snoring
-  isPetsAllowed: Pets
+  isSmoking: boolean
+  isSnoring: boolean
+  isPetsAllowed: boolean
   hasRoom: boolean;
   imgUrl: string[];
   address: string;
@@ -169,7 +166,7 @@ const handleAddressSelect = (addr: AddressResult) => {
   setFormData((prev) => ({ 
     ...prev, 
     address: addr.fullAddress 
-  })); // ✅ input 값 자동완성
+  })); 
   
   console.log('formData.address 업데이트됨:', addr.fullAddress);
 };

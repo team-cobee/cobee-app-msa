@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from '../types/navigation';
 import HomeScreen from '../components/HomeScreen';
-import MapScreen from '../components/MapScreen';
+import MapScreen from '../components/MapScreen.native';
 import ChatScreen from '../components/ChatScreen';
 import NotificationScreen from '../components/NotificationScreen';
 import ProfileScreen from '../components/ProfileScreen';
@@ -72,14 +72,24 @@ export default function MainTabs() {
           lazy: true,
         }}
       />
-      <Tab.Screen 
-        name="Chat" 
-        component={ChatScreen}
-        options={{ 
-          tabBarLabel: '채팅',
-          lazy: true,
-        }}
-      />
+      <Tab.Screen name="Chat" options={{ tabBarLabel: '채팅', lazy: true }}>
+      {(navProps) => (
+        <ChatScreen
+          {...navProps} // navigation, route 전달하려면 타입도 합쳐주세요 (아래 참고)
+          onBack={() => navProps.navigation.goBack()}
+          onNavigateToSettings={() => navProps.navigation.navigate('Settings')}
+          onNavigateToCreateRoom={() => navProps.navigation.navigate('CreateRoom')}
+          onLeaveChatRoom={() => {
+            // 방 나가기 후 이동/정리 로직
+            // ex) 상태 초기화 + 리스트로 이동
+            navProps.navigation.navigate('ChatList');
+          }}
+          chatRoomState={{ hasRoom: false, isOwner: false, roomId: 1 }}
+        />
+      )}
+    </Tab.Screen>
+
+
       <Tab.Screen 
         name="Notification" 
         component={NotificationScreen}

@@ -16,9 +16,8 @@
 //api.ts - 소셜 연동됐을떄 경우 
 import axios, { AxiosError, AxiosHeaders, InternalAxiosRequestConfig } from 'axios';
 import { getAccessToken, getRefreshToken, saveTokens, clearTokens } from './tokenStorage';
-export const DEV_HOST = 'http://172.20.5.74:8080';
-export const BASE_URL = 'http://localhost:8080';
-export const OCR_URL = "https://qwen-vl-service-108875465480.asia-southeast1.run.app";
+export const DEV_HOST = 'http://172.20.5.123:8080';
+export const BASE_URL = 'http://133.186.152.34:8080';  // 배포 주소 
 
 export async function authHeader() {
   const token = await getAccessToken().catch(() => null);
@@ -29,11 +28,6 @@ export const api = axios.create({
   baseURL: DEV_HOST,
   timeout: 10_000,
 });
-
-export const ocrApi = axios.create({
-  baseURL : OCR_URL,
-  timeout : 10_000
-})
 
 // --- 요청 인터셉터: AsyncStorage에서 토큰 읽어서 붙이기
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
