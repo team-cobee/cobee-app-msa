@@ -33,7 +33,7 @@ const ChatScreen = lazy(() => import('./components/ChatScreen'));
 const ProfileScreen = lazy(() => import('./components/ProfileScreen'));
 const LoginScreen = lazy(() => import('./components/LoginScreen'));
 const SignupScreen = lazy(() => import('./components/SignupScreen'));
-const MapScreen = lazy(() => import('./components/MapScreen'));
+const MapScreen = lazy(() => import('./components/MapScreen.native'));
 const NotificationScreen = lazy(() => import('./components/NotificationScreen'));
 const CreateJobPosting = lazy(() => import('./components/CreateJobPosting'));
 const JobPostingCompleteScreen = lazy(() => import('./components/JobPostingCompleteScreen'));
