@@ -1,22 +1,51 @@
+# .github/workflows/deploy-web.yml
 name: Cobee Web Deploy
+
 on:
   push:
     branches: [ main ]
+
+# GitHub Pages (Actions) 방식은 이 권한 두 개가 필수
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 18
+
       - run: npm ci
+
+      # Expo 웹 빌드 (dist/ 생성)
       - run: npx expo export -p web
         env:
           EXPO_PUBLIC_FCM_PROJECT_ID: ${{ secrets.EXPO_PUBLIC_FCM_PROJECT_ID }}
-      - run: cp dist/index.html dist/404.html  # SPA 라우팅용
-      - uses: peaceiris/actions-main@v3
+
+      # SPA 새로고침 404 방지
+      - run: cp dist/index.html dist/404.html
+
+      # Pages로 올릴 산출물 업로드
+      - uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          publish_branch: main
+          path: ./dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
