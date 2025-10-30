@@ -76,7 +76,7 @@ export default function LoginScreen({ onSkip, onSignup }: LoginScreenProps) {
   ];
 
   const openNaver = () => {
-    const authUrl = `${DEV_HOST}/oauth2/authorization/naver`;
+    const authUrl = `${BASE_URL}/oauth2/authorization/naver`;
     setWebUrl(authUrl);
   }
 

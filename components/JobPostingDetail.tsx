@@ -434,12 +434,24 @@ const getAllComments = async (postId : number) => {
   // };
 
   const toggleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
+    createBookmark(recruit!.postId);
+    if (isBookmarked) setIsBookmarked(false);
+    else setIsBookmarked(true);
     Alert.alert(
       "알림",
-      isBookmarked ? "북마크가 해제되었습니다." : "북마크에 추가되었습니다."
+      isBookmarked ? "북마크가 추가되었습니다." : "북마크가 취소되었습니다."
     );
   };
+
+  const createBookmark = (postId : number) => {
+    const createdPost = api.post(`/bookmark/${postId}`);
+    console.log(createdPost);
+    Alert.alert('알림', '북마크가 추가되었습니다');
+  }
+
+  const deleteBookmark = (postId : number) => {
+    
+  }
 
   // 원댓글 추가
   const handleAddComment = () => {
