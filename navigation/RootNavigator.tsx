@@ -9,7 +9,7 @@ import MainTabs from './MainTabs';
 const JobPostingDetail = React.lazy(() => import('../components/JobPostingDetail'));
 const CreateJobPosting = React.lazy(() => import('../components/CreateJobPosting'));
 const JobPostingCompleteScreen = React.lazy(() => import('../components/JobPostingCompleteScreen'));
-const ProfileEditScreen = React.lazy(() => import('../components/ProfileEditScreen'));
+//const ProfileEditScreen = React.lazy(() => import('../components/ProfileEditScreen'));
 const PublicProfileEditScreen = React.lazy(() => import('../components/PublicProfileEditScreen'));
 const PublicProfileViewScreen = React.lazy(() => import('../components/PublicProfileViewScreen'));
 const MatchingStatusScreen = React.lazy(() => import('../components/MatchingStatusScreen'));
