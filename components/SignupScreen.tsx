@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, CardContent, CardHeader } from './ui/card';
-import { Gender, Lifestyle, Personality, Pets, Smoking, Snoring, SocialType } from '@/types/enums';
+import { Gender, Lifestyle, Personality, SocialType } from '@/types/enums';
 
 interface SignupScreenProps {
   onSignup?: () => void;
@@ -430,6 +430,7 @@ const handleFinishSignup = async () => {
     const prefPayload = buildUserPreferencesPayload(formData);
     console.log(prefPayload);
     await makeUserPreferences(prefPayload);
+    console.log("선호도 저장 완료")
 
     // 2) 공개 프로필 저장
     const profilePayload = buildPublicProfilePayload(formData);
@@ -441,7 +442,10 @@ const handleFinishSignup = async () => {
     onSignup?.();
     onComplete?.();
   } catch (e: any) {
-    Alert.alert('에러', e?.message ?? '저장 중 오류가 발생했습니다.');
+    console.error('[ERROR] 저장 실패:', e.data.data);
+    console.error('[ERROR] 응답 데이터:', e?.data?.message);
+    console.error('[ERROR] 상태 코드:', e?.data?.message);
+   // Alert.alert('에러', e?.response?.data?.message || e?.message ?? '저장 중 오류가 발생했습니다.');
   }
 };
 
