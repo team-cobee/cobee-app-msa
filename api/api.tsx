@@ -29,11 +29,6 @@ export const api = axios.create({
   timeout: 10_000,
 });
 
-export const ocrApi = axios.create({
-  baseURL : OCR_URL,
-  timeout : 10_000
-})
-
 // --- 요청 인터셉터: AsyncStorage에서 토큰 읽어서 붙이기
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   const token = await getAccessToken();

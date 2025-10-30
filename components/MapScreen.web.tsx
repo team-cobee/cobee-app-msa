@@ -1,15 +1,9 @@
-// components/MapScreen.web.tsx
 import React from "react";
 import { View, Text, StyleSheet, Dimensions, TextInput, TouchableOpacity, ScrollView, Modal, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import RNSlider from '@react-native-community/slider';
-// import MapView from "react-native-maps"; // 🚨 웹 빌드 시 오류 방지를 위해 import 제거
-
-// MapScreen.web.tsx에서는 MapView 대신 일반 View를 사용하여 지도 화면을 대체합니다.
-
 const screenHeight = Dimensions.get("window").height;
 
-// MapScreen.tsx (원본)의 props와 동일하게 정의합니다.
 interface MapScreenProps {
   onBack?: () => void;
   onNavigateToJob?: (jobId: string) => void;
