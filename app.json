@@ -27,7 +27,6 @@
       },
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "pan"
-
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,6 +37,11 @@
       "expo-secure-store",
       "expo-web-browser",
       "expo-notifications"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f7e7d89f-6309-4671-be88-0baaf6e4c6b5"
+      }
+    }
   }
 }

@@ -76,30 +76,25 @@ export default function App() {
   
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const {
-    fcmToken,
-    error: fcmError,
-    permissionStatus,
-    refreshToken: refreshFcmToken,
-  } = useFcmToken({ enabled: isLoggedIn, autoRegister: false });
+  const { token, ready, error } = useFcmToken('1'); 
 
   useEffect(() => {
-    if (fcmToken) {
-      console.log('[Notifications] FCM token issued:', `${fcmToken.slice(0, 12)}...`);
+    if (token) {
+      console.log('[Notifications] FCM token issued:', `${token.slice(0, 12)}...`);
     }
-  }, [fcmToken]);
+  }, [token]);
 
   useEffect(() => {
-    if (fcmError) {
-      console.warn('[Notifications] FCM token error:', fcmError);
+    if (token) {
+      //console.warn('[Notifications] FCM token error:', fcmError);
     }
-  }, [fcmError]);
+  }, [token]);
 
-  useEffect(() => {
-    if (permissionStatus && permissionStatus !== Notifications.PermissionStatus.GRANTED) {
-      console.warn('[Notifications] Current permission status:', permissionStatus);
-    }
-  }, [permissionStatus]);
+  // useEffect(() => {
+  //   if (permissionStatus && permissionStatus !== Notifications.PermissionStatus.GRANTED) {
+  //     console.warn('[Notifications] Current permission status:', permissionStatus);
+  //   }
+  // }, [permissionStatus]);
 
 
   // 채팅
@@ -130,7 +125,7 @@ export default function App() {
   const handleLogin = () => {
     setIsLoggedIn(true);
     setCurrentRoute({ screen: 'Main' });
-    refreshFcmToken();
+   // refreshFcmToken();
   };
 
 
