@@ -329,7 +329,7 @@ export default function ProfileScreen({
               <View style={styles.profileInfo}>
                 <Text style={styles.userName}>{userInfo?.name}</Text>
                 <Text style={styles.userEmail}>{userInfo?.email}</Text>
-                <Text style={styles.userDetails}>{`나이 : 출생년도/${userInfo.birthDate}`} • {userInfo?.gender == 'F' ? '여성' : '남성'}</Text>
+                <Text style={styles.userDetails}>{ageText} • {userInfo?.gender == 'FEMALE' ? '여성' : '남성'}</Text>
                 <View></View>
                 <Badge variant="default" style={styles.verificationBadge}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>

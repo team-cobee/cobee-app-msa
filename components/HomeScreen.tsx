@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gender, Lifestyle, Snoring, Smoking, Personality, Pets, SocialType } from '@/types/enums';
+import { Gender, Lifestyle, Personality,SocialType } from '@/types/enums';
 import { Dimensions } from 'react-native';
 import { AxiosResponse } from "axios";
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -35,9 +35,9 @@ interface RecruitResponse{
   hasRoom: boolean;  // true : 방있음, false : 함께 찾기 
   lifestyle?: Lifestyle;
   personality?: Personality
-  isSmoking?: Smoking
-  isSnoring?: Snoring
-  isPetsAllowed?: Pets
+  isSmoking?: boolean
+  isSnoring?: boolean
+  isPetsAllowed?: boolean
   recruitCount : number
   authorAgeRange : string;   // 20대 초반...
   authorGender : Gender

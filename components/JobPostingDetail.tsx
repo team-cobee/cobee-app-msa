@@ -4,10 +4,7 @@ import { getAccessToken } from "@/api/tokenStorage";
 import {
   Gender,
   Lifestyle,
-  Snoring,
-  Smoking,
   Personality,
-  Pets,
   RecruitStatus,
   MatchStatus,
 } from "@/types/enums";
@@ -79,21 +76,22 @@ interface RecruitResponse {
   monthlyCostMin: number;
   monthlyCostMax: number;
 
-  preferedGender: Gender;
-  preferedMinAge: number;
-  preferedMaxAge: number;
+  preferredGender: Gender;
+  preferredMinAge: number;
+  preferredMaxAge: number;
   preferedLifeStyle?: Lifestyle;
   preferedPersonality?: Personality;
-  preferedSmoking?: Smoking;
-  preferedSnoring?: Snoring;
-  preferedHasPet?: Pets;
+  preferredSmoking?: boolean;
+  preferredSnoring?: boolean;
+  preferredHasPet?: boolean;
 
   address: string;
   latitude: Double;
   longitude: Double;
 
-  detailDescript: string;
-  additionalDescript: string;
+  detailInfo: string;
+  additionalInfo: string,
+  applicantCount: number;
 
   imgUrl: string[] | null;
 }
@@ -336,7 +334,7 @@ const getAllComments = async (postId : number) => {
 
     (async () => {
       try {
-        const res = await api.get(`/recruits/${jobId}`);
+        const res = await api.get(`/recruit/${jobId}`);
         console.log('API Response:', JSON.stringify(res.data, null, 2));
         if (cancelled) return;
         const data = res.data?.data;
@@ -353,15 +351,6 @@ const getAllComments = async (postId : number) => {
       cancelled = true;
     }; // ★ 이전 요청 무시
   }, [jobId]);
-
-  const getGenderText = (gender: Gender) => {
-    const map: Record<Gender, string> = {
-      [Gender.Male]: "남자",
-      [Gender.Female]: "여자",
-      [Gender.None]: "상관없음",
-    };
-    return map[gender] ?? gender;
-  };
 
   // Lifestyle
   const getLifestyleText = (lifestyle?: Lifestyle) => {
@@ -386,34 +375,22 @@ const getAllComments = async (postId : number) => {
   };
 
   // Smoking
-  const getSmokingText = (smoking?: Smoking) => {
-    if (!smoking) return "상관없음";
-    const map: Record<Smoking, string> = {
-      [Smoking.None]: "흡연 가능",
-      [Smoking.Impossible]: "비흡연"
-    };
-    return map[smoking] ?? smoking;
+  const getSmokingText = (smoking?: boolean) => {
+    if (smoking) return "상관없음";
+    else return "흡연 불가능";
+    
   };
 
   // Snoring
-  const getSnoringText = (snoring?: Snoring) => {
-    if (!snoring) return "상관없음";
-    const map: Record<Snoring, string> = {
-      [Snoring.None]: "코골이 있음",
-      [Snoring.Impossible]: "코골이 없음",
-    };
-    return map[snoring] ?? snoring;
+  const getSnoringText = (snoring?: boolean) => {
+    if (snoring) return "상관없음";
+    else return "코골이 불가능";
   };
 
   // Pets
-  const getPetText = (pet?: Pets) => {
-    if (!pet) return "상관없음";
-    const map: Record<Pets, string> = {
-      [Pets.None]: "있음",
-      [Pets.Impossible]: "없음",
-      [Pets.Possible]: "가능"
-    };
-    return map[pet] ?? pet;
+  const getPetText = (pet?: boolean) => {
+    if (pet) return "상관없음";
+    else return "반려동물 불가능";
   };
 
   // RoomStatus
@@ -450,7 +427,7 @@ const getAllComments = async (postId : number) => {
   }
 
   const deleteBookmark = (postId : number) => {
-    
+
   }
 
   // 원댓글 추가
@@ -617,7 +594,7 @@ const getAllComments = async (postId : number) => {
                 <View>
                   <Text style={styles.fontMedium}>{recruit.authorName}</Text>
                   <Text style={styles.mutedTextSm}>
-                    {recruit.authorGender} • {getAge(recruit.birthdate)}
+                    {/* {recruit.authorGender} • {getAge(recruit.birthdate)} */}
                   </Text>
                 </View>
               </View>
@@ -677,15 +654,15 @@ const getAllComments = async (postId : number) => {
                 <View style={styles.gridItem}>
                   <Text style={styles.mutedTextSm}>선호 성별</Text>
                   <Text style={styles.fontMedium}>
-                    {getGenderText(recruit.preferedGender)}
+                    {(recruit.preferredGender === Gender.Female) ? '여성' : '님성'}
                   </Text>
                 </View>
                 <View style={styles.gridItem}>
                   <Text style={styles.mutedTextSm}>선호 나이대</Text>
                   <Text style={styles.fontMedium}>
-                    {recruit.preferedMinAge === recruit.preferedMaxAge
-                      ? `${recruit.preferedMinAge}세`
-                      : `${recruit.preferedMinAge}~${recruit.preferedMaxAge}세`}
+                    {recruit.preferredMinAge === recruit.preferredMaxAge
+                      ? `${recruit.preferredMinAge}세`
+                      : `${recruit.preferredMinAge}~${recruit.preferredMaxAge}세`}
                   </Text>
                 </View>
               </View>
@@ -730,20 +707,20 @@ const getAllComments = async (postId : number) => {
           </Card>
 
           {/* 상세 설명 & 추가 정보 */}
-          {recruit.detailDescript && (
+          {recruit.detailInfo && (
             <Card>
               <CardHeader>
                 <Text style={styles.cardTitle}>상세 설명</Text>
               </CardHeader>
               <CardContent>
                 <Text style={styles.descriptionText}>
-                  {recruit.detailDescript}
+                  {recruit.detailInfo}
                 </Text>
               </CardContent>
             </Card>
           )}
 
-          {recruit.additionalDescript && (
+          {recruit.additionalInfo && (
             <Card>
               <CardHeader>
                 <Text style={styles.cardTitle}>
@@ -752,7 +729,7 @@ const getAllComments = async (postId : number) => {
               </CardHeader>
               <CardContent>
                 <Text style={styles.descriptionText}>
-                  {recruit.additionalDescript}
+                  {recruit.additionalInfo}
                 </Text>
               </CardContent>
             </Card>

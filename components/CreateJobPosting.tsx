@@ -893,12 +893,19 @@ const toSnoringEnum = (v: string): boolean => {
 
 const toPetsEnum = (v: string): boolean => {
   switch (v) {
-    case 'possible': return true;      // 가능
     case 'impossible': return false;   // 불가능
     case 'none': return true;          // 상관없음
     default: return false;
   }
 };
+const toGenderEnum = (v: string): Gender => {
+  switch (v) {
+    case "여성" : return Gender.Female;   // 여자
+    case "남성": return Gender.Male;          // 남자
+    default: return Gender.None;
+  }
+};
+
 
 /** 서버에 보낼 Request 타입(백엔드 RecruitRequest와 1:1) */
 type RecruitRequest = {
@@ -907,6 +914,7 @@ type RecruitRequest = {
   rentCostMin: number;
   rentCostMax: number;
   monthlyCostMin: number;
+  gender : Gender;
   monthlyCostMax: number;
   minAge: number;
   maxAge: number;
@@ -1008,7 +1016,8 @@ const handleAddressSelect = (addr: AddressResult) => {
 
     // Step 2
     ageMin: 20,
-    ageMax: 90,
+    ageMax: 34,
+    preferredGender : 'none',
     lifestyle: '',
     personality: '',
     smoking: '',
@@ -1051,6 +1060,7 @@ const handleAddressSelect = (addr: AddressResult) => {
           formData.ageMin <= formData.ageMax;
         return (
           ageOK &&
+          !!formData.preferredGender &&
           !!formData.lifestyle &&
           !!formData.personality &&
           !!formData.smoking &&
@@ -1089,6 +1099,7 @@ const handleAddressSelect = (addr: AddressResult) => {
         isSmoking: toSmokingEnum(formData.smoking),
         isSnoring: toSnoringEnum(formData.snoring),
         isPetsAllowed: toPetsEnum(formData.pets),
+        gender: formData.preferredGender as Gender,
         hasRoom: formData.hasRoom === 'has',
         imgUrl: [], // 이미지 없이 빈 배열
         address: formData.address,
@@ -1220,6 +1231,7 @@ const handleAddressSelect = (addr: AddressResult) => {
       </View>
 
       <View style={styles.formSection}>
+
         <View style={styles.fieldContainer}>
           <Text style={styles.label}>나이 범위</Text>
           <View style={styles.rangeInputContainer}>
@@ -1238,6 +1250,28 @@ const handleAddressSelect = (addr: AddressResult) => {
               onChangeText={(t) => setFormData({ ...formData, ageMax: parseInt(t) || 0 })}
               keyboardType="numeric"
             />
+          </View>
+        </View>
+
+
+        <View style={styles.fieldContainer}>
+          <Text style={styles.label}>선호 성별</Text>
+          <View style={styles.optionsContainer}>
+            {[
+              { value: Gender.Female, label: '여성' },
+              { value: Gender.Male, label: '남성' },
+            ].map((o) => (
+              <TouchableOpacity
+                key={o.value}
+                style={[
+                  styles.optionButton,
+                  formData.preferredGender === o.value && styles.optionButtonSelected,
+                ]}
+                onPress={() => setFormData({ ...formData, preferredGender: o.value })}
+              >
+                <Text style={styles.optionText}>{o.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
@@ -1329,7 +1363,6 @@ const handleAddressSelect = (addr: AddressResult) => {
           <Text style={styles.label}>반려동물</Text>
           <View style={styles.optionsContainer}>
             {[
-              { value: 'possible', label: '가능' },
               { value: 'impossible', label: '불가능' },
               { value: 'none', label: '상관없음' },
             ].map((o) => (

@@ -679,8 +679,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { api } from '@/api/api';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Avatar, AvatarFallback } from './ui/avatar';
-import { Gender, Lifestyle, Personality, Pets, Smoking, Snoring, SocialType } from '@/types/enums';
+import { Gender, Lifestyle, Personality, SocialType } from '@/types/enums';
 import { authHeader } from '@/api/api';
+import { set } from 'react-hook-form';
 interface PublicProfileViewScreenProps {
   onBack?: () => void;
   onEdit?: () => void;
@@ -690,16 +691,16 @@ interface PublicProfileViewScreenProps {
 
 // 백엔드 응답에 맞는 인터페이스
 interface PublicProfile {
-  userId: number;
+  memberId: number;
   name: string;
-  gender: string;
+  gender: Gender;
   profileImageUrl: string;
-  info: string;
-  mLifestyle: Lifestyle;
-  mPersonality: Personality;
-  mSmoking: Smoking;
-  mSnoring: Snoring;
-  mPet: Pets;
+  lifestyle: Lifestyle;
+  personality: Personality;
+  mSmoking: boolean;
+  mSnoring: boolean;
+  mPet: boolean;
+  myInfo: string;
 }
 
 interface UserInfo {
@@ -755,104 +756,86 @@ export default function PublicProfileViewScreen({
     fetchLoginUserInfo();
     return () => { cancelled = true; };
   }, []);
+useEffect(() => {
+  let cancelled = false;
 
-  // 공개 프로필 가져오기
-  // useEffect(() => {
-  //   let cancelled = false;
+  const fetchPublicProfile = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  //   const fetchPublicProfile = async () => {
-  //     try {
-  //       setLoading(true);
-  //       setError(null);
-        
-  //       console.log('Fetching public profile for userId:', loginUserInfo?.id);
-  //       console.log('Login user ID:', loginUserInfo?.id);
+      const token = await getAccessToken().catch(() => null);
 
-  //       const token = await getAccessToken().catch(() => null);
-        
-  //       let res;
-  //       // userId가 없거나 로그인 사용자와 같으면 본인 프로필 조회
-  //       if (!userId) {
-  //         console.log('Fetching own profile...');
-  //         res = await api.get('/public-profiles', {
-  //           headers: token ? { Authorization: `Bearer ${token}` } : {}
-  //         });
-  //         console.log("--------")
-  //         console.log(res.data?? res.data.data)
-  //       } else {
-  //         // 다른 사용자 프로필 조회
-  //         console.log('Fetching other user profile:', userId);
-  //         res = await api.get(`/public-profiles/${userId}`, {
-  //           headers: token ? { Authorization: `Bearer ${token}` } : {}
-  //         });
-  //       }
+      const res = await api.get('/public-profiles', {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
 
-  //       if (!cancelled) {
-  //         console.log('Public profile response:', res.data);
-  //         if (res.data.data) {
-  //           setPublicProfile(res.data.data);
-  //         } else {
-  //           throw new Error('프로필 데이터가 없습니다.');
-  //         }
-  //       }
-  //     } catch (error: any) {
-  //       console.error('Failed to fetch public profile:', error);
-  //       if (!cancelled) {
-  //         setError(error.response?.data?.message || '프로필을 불러오는데 실패했습니다.');
-  //       }
-  //     } finally {
-  //       if (!cancelled) {
-  //         setLoading(false);
-  //       }
-  //     }
-  //   };
-
-  //   // loginUserInfo가 로드된 후에 프로필을 가져옴
-  //   if (loginUserInfo) {
-  //     fetchPublicProfile();
-  //   }
-
-  //   return () => { cancelled = true; };
-  // }, [userId, loginUserInfo]);
-
-
- const fetchPublicProfile = React.useCallback(async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-       const headers = await authHeader();
-       // userId가 없거나 로그인 유저와 같으면 "내 프로필"
-       const isOwn = userId == null || (loginUserInfo && Number(userId) === Number(loginUserInfo.id));
-       let res;
-       if (isOwn) {
-          console.log('Fetching own profile...');
-
-         res = await api.get('/public-profiles', { headers });
-        } else {
-
-         console.log('Fetching other user profile:', userId);
-         res = await api.get(`/public-profiles/${userId}`, { headers });
-        }
-
-       console.log('Public profile response:', res.data);
-       const data = res.data?.data;
-       if (!data) throw new Error(res.data?.message || '프로필 데이터가 없습니다.');
-       setPublicProfile(data);
-      } catch (error: any) {
-        console.error('Failed to fetch public profile:', error);
-       // 404 메시지 반영
-       const msg = error?.response?.data?.message || error?.message || '프로필을 불러오는데 실패했습니다.';
-       setError(msg);
-      } finally {
-       setLoading(false);
+      if (!cancelled) {
+        // API 응답 형태에 따라 둘 중 하나로 맞춰주세요
+        const data = res.data?.data ?? res.data;
+        setPublicProfile(data);
       }
+    } catch (e: any) {
+      if (!cancelled) {
+        const msg =
+          e?.response?.data?.message ??
+          e?.message ??
+          '공개 프로필을 가져오는 중 오류가 발생했습니다.';
+        setError(msg);
+        console.error('Failed to fetch public profile:', e);
+      }
+    } finally {
+      if (!cancelled) setLoading(false);
+    }
+  };
 
- }, [userId, loginUserInfo]);
+  // 🔹 최초/의존성 변경 시 1회 호출
+  fetchPublicProfile();
 
- useEffect(() => {
-   if (loginUserInfo) fetchPublicProfile();
-}, [loginUserInfo, fetchPublicProfile]);
+  // 🔹 언마운트/의존성 변경 시 정리
+  return () => {
+    cancelled = true;
+  };
+  // 로그인한 사용자 ID가 바뀌면 다시 호출 (필요 없으면 []로 두세요)
+}, [loginUserInfo?.id]);
+
+//  const fetchPublicProfile = React.useCallback(async () => {
+//       try {
+//         setLoading(true);
+//         setError(null);
+
+//        const headers = await authHeader();
+//        // userId가 없거나 로그인 유저와 같으면 "내 프로필"
+//        const isOwn = userId == null || (loginUserInfo && Number(userId) === Number(loginUserInfo.id));
+//        let res;
+//        if (isOwn) {
+//           console.log('Fetching own profile...');
+
+//          res = await api.get('/public-profiles', { headers });
+//         } else {
+
+//          console.log('Fetching other user profile:', userId);
+//          res = await api.get(`/public-profiles/${userId}`, { headers });
+//         }
+
+//        console.log('Public profile response:', res.data);
+//        const data = res.data?.data;
+//        if (!data) throw new Error(res.data?.message || '프로필 데이터가 없습니다.');
+//        setPublicProfile(data);
+//       } catch (error: any) {
+//         console.error('Failed to fetch public profile:', error);
+//        // 404 메시지 반영
+//        const msg = error?.response?.data?.message || error?.message || '프로필을 불러오는데 실패했습니다.';
+//        setError(msg);
+//       } finally {
+//        setLoading(false);
+//       }
+
+//  }, [userId, loginUserInfo]);
+
+//  useEffect(() => {
+//    if (loginUserInfo) fetchPublicProfile();
+// }, [loginUserInfo, fetchPublicProfile]);
 
 
   // 나이 계산 함수
@@ -864,9 +847,9 @@ export default function PublicProfileViewScreen({
 
   // 본인 프로필인지 확인
   const isOwnProfile = loginUserInfo && publicProfile && 
-    (Number(loginUserInfo.id) === Number(publicProfile.userId));
+    (Number(loginUserInfo.id) === Number(publicProfile.memberId));
 
-  console.log('Is own profile:', isOwnProfile, 'loginUserId:', loginUserInfo?.id, 'profileUserId:', publicProfile?.userId);
+  console.log('Is own profile:', isOwnProfile, 'loginUserId:', loginUserInfo?.id, 'profileUserId:', publicProfile?.memberId);
 
   // 텍스트 변환 함수들
   const tGender = (g?: string) =>
@@ -884,21 +867,20 @@ export default function PublicProfileViewScreen({
     v === Personality.Extrovert ? '밖순이' :
     '상관없음';
 
-  const tSmoking = (v?: Smoking) =>
-    v === Smoking.None ? '비흡연' :
-    v === Smoking.Impossible ? '흡연불가' :
-    '상관없음';
+  const tSmoking = (v?: boolean) =>
+    v === false ? '비흡연' :
+    v === true ? '흡연자' :
+    '';
 
-  const tSnoring = (v?: Snoring) =>
-    v === Snoring.None ? '코골이 없음' :
-    v === Snoring.Impossible ? '코골이 불가' :
-    '상관없음';
+  const tSnoring = (v?: boolean) =>
+    v === true? '코골이함' :
+    v === false ? '코골이 안함' :
+    '그외';
 
-  const tPets = (v?: Pets) =>
-    v === Pets.Possible ? '가능' :
-    v === Pets.None ? '없음' :
-    v === Pets.Impossible ? '불가능' :
-    '상관없음';
+  const tPets = (v?: boolean) =>
+    v === true ? '있음' :
+    v === false? '없음' :
+    '그외';
 
   type LifestyleKey = 'lifestyle' | 'personality' | 'smoking' | 'hasPet' | 'snoring';
 
@@ -998,8 +980,8 @@ export default function PublicProfileViewScreen({
 
   // 생활 스타일 데이터 준비
   const lifestyleRows: { key: LifestyleKey; label: string; value: string }[] = [
-    { key: 'lifestyle',   label: getLifestyleLabel('lifestyle'),   value: tLifestyle(publicProfile.mLifestyle) },
-    { key: 'personality', label: getLifestyleLabel('personality'), value: tPersonality(publicProfile.mPersonality) },
+    { key: 'lifestyle',   label: getLifestyleLabel('lifestyle'),   value: tLifestyle(publicProfile.lifestyle) },
+    { key: 'personality', label: getLifestyleLabel('personality'), value: tPersonality(publicProfile.personality) },
     { key: 'smoking',     label: getLifestyleLabel('smoking'),     value: tSmoking(publicProfile.mSmoking) },
     { key: 'hasPet',      label: getLifestyleLabel('hasPet'),      value: tPets(publicProfile.mPet) },
     { key: 'snoring',     label: getLifestyleLabel('snoring'),     value: tSnoring(publicProfile.mSnoring) },
@@ -1090,7 +1072,7 @@ export default function PublicProfileViewScreen({
           </CardHeader>
           <CardContent>
             <Text style={{ fontSize: 14, lineHeight: 20, color: '#374151' }}>
-              {publicProfile.info || '자기소개가 없습니다.'}
+              {publicProfile.myInfo || '자기소개가 없습니다.'}
             </Text>
           </CardContent>
         </Card>
