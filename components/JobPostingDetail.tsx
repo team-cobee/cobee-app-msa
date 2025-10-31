@@ -467,11 +467,11 @@ const getAllComments = async (postId : number) => {
   };
 
   const handleDelete = () => {
-    if (jobId && onDelete) {
-      onDelete(jobId);
-      setShowDeleteDialog(false);
-    }
-  };
+  if (!recruit?.postId) return;
+  setShowDeleteDialog(false); // 모달 닫기
+  deleteRecruit(recruit.postId); // API 요청 실행
+};
+
 
   const handleApply = () => {
     setIsApplied(true);
@@ -481,6 +481,22 @@ const getAllComments = async (postId : number) => {
       "지원이 완료되었습니다! 작성자에게 공개 프로필이 전송되었습니다."
     );
   };
+
+  const deleteRecruit = async (postId: number) => {
+  try {
+    const token = await getAccessToken().catch(() => null);
+    const res = await api.delete(`/recruit/${postId}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    console.log('삭제 완료:', res.data);
+    Alert.alert('알림', '구인글이 삭제되었습니다.');
+    onBack?.(); // 삭제 후 이전 화면으로 이동
+  } catch (e: any) {
+    console.error('삭제 실패:', e);
+    Alert.alert('에러', e?.response?.data?.message ?? '삭제 중 오류가 발생했습니다.');
+  }
+};
+
 
   if (!recruit) {
     return (
