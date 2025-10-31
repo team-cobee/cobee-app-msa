@@ -21,19 +21,23 @@ interface BookmarkListScreenProps {
 const USE_MOCK = false;
 
 interface BookmarkJob {
-  id: number;
+  postId: number;
+  bookmarkId: number;
   title: string;
-  location: string;
+  address: string;
   authorName: string;
-  monthlyRent: number;
+  monthlyCostMin: number;
+  monthlyCostMax: number;
+  rentalCostMin: number;
+  rentalCostMax: number;
   recruitCount: number;
   status: RecruitStatus    
-  smoking?: boolean;
-  lifestyle?: Lifestyle;
-  pets?: boolean;
-  snoring?: boolean;
-  gender?: Gender;
-  personality?: Personality;
+  preferedGender: Gender;
+  preferedLifeStyle: Lifestyle
+  preferedPersonality: Personality
+  preferedSmoking: Boolean;
+  preferedSnoring: Boolean;
+  preferedHasPet: Boolean;
   createdAt: string;
 }
 
@@ -42,33 +46,33 @@ function buildTagsFromEnums(job: Partial<BookmarkJob>): string[] {
   const tags: string[] = [];
 
   // 흡연
-  if (job.smoking) {
-    if (job.smoking === true) tags.push('흡연 상관없음');
-    else if (job.smoking === false ) tags.push('흡연자 안됨');
+  if (job.preferedSmoking) {
+    if (job.preferedSmoking === true) tags.push('흡연 상관없음');
+    else if (job.preferedSmoking === false ) tags.push('흡연자 안됨');
   }
 
   // 생활패턴
-  if (job.lifestyle) {
-    if (job.lifestyle === Lifestyle.Morning) tags.push('아침형');
-    else if (job.lifestyle === Lifestyle.Evening) tags.push('저녁형');
+  if (job.preferedLifeStyle) {
+    if (job.preferedLifeStyle === Lifestyle.Morning) tags.push('아침형');
+    else if (job.preferedLifeStyle === Lifestyle.Evening) tags.push('저녁형');
   }
 
   // 반려동물
-  if (job.pets) {
-    if (job.pets === true) tags.push('반려동물 상관없음');
-    else if (job.pets === false) tags.push('반려동물 불가');
+  if (job.preferedHasPet) {
+    if (job.preferedHasPet === true) tags.push('반려동물 상관없음');
+    else if (job.preferedHasPet === false) tags.push('반려동물 불가');
   }
 
   // 코골이
-  if (job.snoring) {
-    if (job.snoring === true) tags.push('코골이 상관없음');
-    else if (job.snoring === false ) tags.push('코골이 불가능');
+  if (job.preferedSnoring) {
+    if (job.preferedSnoring === true) tags.push('코골이 상관없음');
+    else if (job.preferedSnoring === false ) tags.push('코골이 불가능');
   }
 
   // 성격(원하면 표시)
-  if (job.personality) {
-    if (job.personality === Personality.Introvert) tags.push('내향적');
-    if (job.personality === Personality.Extrovert) tags.push('외향적');
+  if (job.preferedPersonality) {
+    if (job.preferedPersonality === Personality.Introvert) tags.push('내향적');
+    if (job.preferedPersonality === Personality.Extrovert) tags.push('외향적');
   }
 
   return tags;
@@ -95,35 +99,13 @@ export default function BookmarkListScreen({ onBack, onNavigateToJob }: Bookmark
 
     async function load() {
       try {
-          // 실제 API 호출 (엔드포인트/스키마는 서버에 맞게 수정)
           const res = await api.get('/bookmark');
           if (!res.data.data) {
-            //const text = await res.text().catch(() => '');
             throw new Error(`응답 오류(${res.status}) ${res.data.data ?? ''}`);
           }
           const data = res.data.data;
-
-          // 서버 응답 → 화면용 구조로 정규화
-          const normalized: BookmarkJob[] = (Array.isArray(data) ? data : []).map((d) => {
-            const item: BookmarkJob = {
-              id: Number(d.id),
-              title: d.title ?? '',
-              location: d.location ?? '',
-              authorName: d.author ?? '',
-              monthlyRent: Number(d.monthlyRent ?? 0),
-              recruitCount: Number(d.recruitCount ?? 0),
-              status: (d.status as RecruitStatus) ?? RecruitStatus.Recruiting,
-              createdAt: d.createdAt ?? new Date().toISOString().slice(0, 10),
-              smoking: d.smoking,
-              lifestyle: d.lifestyle as Lifestyle | undefined,
-              pets: d.pets,
-              snoring: d.snoring,
-              gender: d.gender as Gender ,
-              personality: d.personality as Personality | undefined,
-            };
-            return { ...item, tags: buildTagsFromEnums(item) };
-          });
-          if (mounted) setBookmarkedJobs(normalized);
+          setBookmarkedJobs(data);
+          buildTagsFromEnums(data);
       } catch (e) {
         console.error(e);
         if (mounted) setBookmarkedJobs([]); // 실패 시 빈 배열

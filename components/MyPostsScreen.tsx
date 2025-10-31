@@ -69,36 +69,6 @@ export default function MyPostsScreen({ onBack, onNavigateToJob, onNavigateToApp
     };
     }, []);   
 
-
-
-  const fetchApplicants = async (postId : number) => {
-    if (!postId) {                      // postId 없으면 빈 목록 처리
-      setApplicants([]);
-      return;
-    }
-    try {
-      const token = await getAccessToken().catch(() => null);  
-      const res = await api.get(`/apply/${postId}/all`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}, 
-      });
-
-      // 응답을 방어적으로 배열 추출
-      const payload = res?.data?.data ?? res?.data ?? [];
-      const list =
-        Array.isArray(payload)
-          ? payload
-          : Array.isArray(payload?.content)
-          ? payload.content
-          : [];
-
-      setApplicants(list as Applicant[]);
-    } catch (e: any) {
-      setApplicants([]);               
-    }
-  [postId]};
-
-
-
   const handleDeleteClick = (postId: number) => {
     const post = myPosts.find(p => p.postId === postId);
     Alert.alert(
@@ -160,13 +130,13 @@ export default function MyPostsScreen({ onBack, onNavigateToJob, onNavigateToApp
               </View>
               <View style={{ alignItems: 'center' }}>
                 <Text style={{ fontSize: 18, fontWeight: '600', color: '#16a34a' }}>
-                  {myPosts.filter(post => post.status === RecruitStatus.Recruiting).length}
+                  {myPosts.filter(post => post.recruitStatus === RecruitStatus.Recruiting).length}
                 </Text>
                 <Text style={{ fontSize: 14, color: '#6b7280' }}>모집중</Text>
               </View>
               <View style={{ alignItems: 'center' }}>
                 <Text style={{ fontSize: 18, fontWeight: '600', color: '#2563eb' }}>
-                  {myPosts.filter(post => post.status === RecruitStatus.RecruitOver).length}
+                  {myPosts.filter(post => post.recruitStatus === RecruitStatus.RecruitOver).length}
                 </Text>
                 <Text style={{ fontSize: 14, color: '#6b7280' }}>매칭완료</Text>
               </View>
@@ -204,17 +174,17 @@ export default function MyPostsScreen({ onBack, onNavigateToJob, onNavigateToApp
                     )}
                     <View style={{ position: 'absolute', top: 12, left: 12 }}>
                       <Badge style={{
-                        backgroundColor: post.status === RecruitStatus.Recruiting ? 'rgba(34, 197, 94, 0.1)' : post.status === RecruitStatus.RecruitOver ? 'rgba(37, 99, 235, 0.1)' : 'rgba(156, 163, 175, 0.1)',
+                        backgroundColor: post.recruitStatus === RecruitStatus.Recruiting ? 'rgba(34, 197, 94, 0.1)' : post.status === RecruitStatus.RecruitOver ? 'rgba(37, 99, 235, 0.1)' : 'rgba(156, 163, 175, 0.1)',
                         paddingHorizontal: 8,
                         paddingVertical: 4,
                         borderRadius: 4,
                       }}>
                         <Text style={{
-                          color: post.status === RecruitStatus.Recruiting ? '#16a34a' : post.status === RecruitStatus.RecruitOver ? '#2563eb' : '#6b7280',
+                          color: post.recruitStatus === RecruitStatus.Recruiting ? '#16a34a' : post.status === RecruitStatus.RecruitOver ? '#2563eb' : '#6b7280',
                           fontSize: 12,
                           fontWeight: '500',
                         }}>
-                          {post.status}
+                          {post.recruitStatus}
                         </Text>
                       </Badge>
                     </View>

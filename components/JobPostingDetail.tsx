@@ -411,6 +411,7 @@ const getAllComments = async (postId : number) => {
   // };
 
   const toggleBookmark = () => {
+    console.log("북마크여부 " + isBookmarked);
     createBookmark(recruit!.postId);
     if (isBookmarked) setIsBookmarked(false);
     else setIsBookmarked(true);
@@ -463,7 +464,8 @@ const getAllComments = async (postId : number) => {
   };
 
   const handleEdit = () => {
-    if (jobId && onEdit) onEdit(jobId);
+    if (!recruit?.postId) return;
+    setShowEditDialog(false); // 모달 닫기
   };
 
   const handleDelete = () => {
@@ -494,8 +496,24 @@ const getAllComments = async (postId : number) => {
   } catch (e: any) {
     console.error('삭제 실패:', e);
     Alert.alert('에러', e?.response?.data?.message ?? '삭제 중 오류가 발생했습니다.');
-  }
-};
+    }
+  };
+
+    const editRecruit = async (postId: number) => {
+      try {
+      const token = await getAccessToken().catch(() => null);
+      const res = await api.patch(`/recruit/${postId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+        console.log('수정 완료:', res.data.data);
+        Alert.alert('알림', '구인글이 수정되었습니다.');
+        onBack?.(); // 삭제 후 이전 화면으로 이동
+      } catch (e: any) {
+        console.error('수정 실패:', e);
+        Alert.alert('에러', e?.response?.data?.message ?? '삭제 중 오류가 발생했습니다.');
+        }
+    };
+
 
 
   if (!recruit) {
@@ -573,7 +591,7 @@ const getAllComments = async (postId : number) => {
                 <Text
                   style={[
                     styles.iconTextLg,
-                    isBookmarked && { color: "#F7B32B" },
+                    { color: isBookmarked ? "#d52450ff" : "#9ca3af" },
                   ]}
                 >
                   ♥
@@ -1163,7 +1181,7 @@ const styles = StyleSheet.create({
   mutedText: { fontSize: 14, color: "#6b7280" },
   mutedTextSm: { fontSize: 12, color: "#6b7280" },
   iconText: { fontSize: 16 },
-  iconTextLg: { fontSize: 24, color: "#9ca3af" },
+  iconTextLg: { fontSize: 17, color: "#b7bdc6ff" },
   card: {
     backgroundColor: "#ffffff",
     borderWidth: 1,
