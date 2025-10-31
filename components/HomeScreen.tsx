@@ -223,7 +223,7 @@ export default function HomeScreen({
       {/* 액션 버튼 */}
       <View style={styles.actionButtons}>
         <TouchableOpacity
-          //onPress={() => onNavigateToBookmarks?.()}
+          onPress={() => onNavigateToBookmarks?.()}
           style={[styles.actionButton, styles.secondaryButton, {flexDirection: 'column'}]}
         >
           <Ionicons name="bookmark-outline" size={20} color="#000" /> 

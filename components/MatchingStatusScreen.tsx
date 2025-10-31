@@ -10,8 +10,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Double } from 'react-native/Libraries/Types/CodegenTypes';
-import { Gender, Lifestyle, MatchStatus, Personality, Pets, RecruitStatus, Smoking, Snoring, SocialType } from '@/types/enums';
+import { Gender, Lifestyle, MatchStatus, Personality, RecruitStatus, SocialType } from '@/types/enums';
 import { set } from 'react-hook-form';
+import { getAccessToken } from '@/api/tokenStorage';
 
 interface MatchingStatusScreenProps {
   onBack: () => void;
@@ -43,9 +44,9 @@ interface RecruitResponse{
   preferedMaxAge : number,
   preferedLifeStyle?: Lifestyle;
   preferedPersonality?: Personality
-  preferedSmoking?: Smoking
-  preferedSnoring?: Snoring
-  preferedHasPet?: Pets,
+  preferedSmoking?: boolean
+  preferedSnoring?: boolean
+  preferedHasPet?: boolean
 
   address : string,
   latitude : Double,
@@ -76,9 +77,9 @@ interface applicantsInfo {
     info : string,
     mLifestyle : Lifestyle,
     mPersonality : Personality,
-    mSmoking : Smoking,
-    mSnoring : Snoring,
-    mPet : Pets
+    mSmoking : boolean,
+    mSnoring : boolean,
+    mPet : boolean
 }
 
 export default function MatchingStatusScreen({ onBack, onNavigateToJob }: MatchingStatusScreenProps) {
@@ -94,14 +95,17 @@ export default function MatchingStatusScreen({ onBack, onNavigateToJob }: Matchi
       const load = async () => {
    
         try {
-          const myOnWait = await api.get(`/apply/my/onWait`);  // 지원한 구인글 
+          const myOnWait = await api.get(`/apply/my?status=ON_WAIT`,{
+            headers: { Authorization: `Bearer ${getAccessToken}` }
+          });
+          console.log(myOnWait.data.data)// 지원한 구인글 
           const myOnMatching = await api.get(`/apply/my/matching`); // 초대받은 구인글 
           const myMatched = await api.get(`/apply/my/matched`);  // 매칭완료 구인글 
           const userRes = await api.get(`/auth`);
 
           if (cancelled) return;
         
-          setMyOnwaitPost(myOnWait.data?.data ?? null);
+          setMyOnwaitPost(myOnWait.data.data ?? null);
           setMyMatchingPost(myOnMatching.data?.data ?? null);
           setMyMatchedPost(myMatched.data?.data ?? null);
           setUserInfo(userRes.data?.data ?? null);

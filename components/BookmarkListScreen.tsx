@@ -10,8 +10,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Snoring, Smoking, Gender, Lifestyle, Personality, Pets, MatchStatus, RecruitStatus } from '@/types/enums';
+import { Gender, Lifestyle, Personality, RecruitStatus } from '@/types/enums';
 import { api } from '@/api/api';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { getAccessToken } from '@/api/tokenStorage';
 
 interface BookmarkListScreenProps {
   onBack: () => void;
@@ -21,19 +23,23 @@ interface BookmarkListScreenProps {
 const USE_MOCK = false;
 
 interface BookmarkJob {
-  id: number;
+  postId: number;
+  bookmarkId: number;
   title: string;
-  location: string;
+  address: string;
   authorName: string;
-  monthlyRent: number;
+  monthlyCostMin: number;
+  monthlyCostMax: number;
+  rentalCostMin: number;
+  rentalCostMax: number;
   recruitCount: number;
   status: RecruitStatus    
-  smoking?: boolean;
-  lifestyle?: Lifestyle;
-  pets?: boolean;
-  snoring?: boolean;
-  gender?: Gender;
-  personality?: Personality;
+  preferedGender: Gender;
+  preferedLifeStyle: Lifestyle
+  preferedPersonality: Personality
+  preferedSmoking: Boolean;
+  preferedSnoring: Boolean;
+  preferedHasPet: Boolean;
   createdAt: string;
 }
 
@@ -42,33 +48,33 @@ function buildTagsFromEnums(job: Partial<BookmarkJob>): string[] {
   const tags: string[] = [];
 
   // 흡연
-  if (job.smoking) {
-    if (job.smoking === true) tags.push('흡연 상관없음');
-    else if (job.smoking === false ) tags.push('흡연자 안됨');
+  if (job.preferedSmoking) {
+    if (job.preferedSmoking === true) tags.push('흡연 상관없음');
+    else if (job.preferedSmoking === false ) tags.push('흡연자 안됨');
   }
 
   // 생활패턴
-  if (job.lifestyle) {
-    if (job.lifestyle === Lifestyle.Morning) tags.push('아침형');
-    else if (job.lifestyle === Lifestyle.Evening) tags.push('저녁형');
+  if (job.preferedLifeStyle) {
+    if (job.preferedLifeStyle === Lifestyle.Morning) tags.push('아침형');
+    else if (job.preferedLifeStyle === Lifestyle.Evening) tags.push('저녁형');
   }
 
   // 반려동물
-  if (job.pets) {
-    if (job.pets === true) tags.push('반려동물 상관없음');
-    else if (job.pets === false) tags.push('반려동물 불가');
+  if (job.preferedHasPet) {
+    if (job.preferedHasPet === true) tags.push('반려동물 상관없음');
+    else if (job.preferedHasPet === false) tags.push('반려동물 불가');
   }
 
   // 코골이
-  if (job.snoring) {
-    if (job.snoring === true) tags.push('코골이 상관없음');
-    else if (job.snoring === false ) tags.push('코골이 불가능');
+  if (job.preferedSnoring) {
+    if (job.preferedSnoring === true) tags.push('코골이 상관없음');
+    else if (job.preferedSnoring === false ) tags.push('코골이 불가능');
   }
 
   // 성격(원하면 표시)
-  if (job.personality) {
-    if (job.personality === Personality.Introvert) tags.push('내향적');
-    if (job.personality === Personality.Extrovert) tags.push('외향적');
+  if (job.preferedPersonality) {
+    if (job.preferedPersonality === Personality.Introvert) tags.push('내향적');
+    if (job.preferedPersonality === Personality.Extrovert) tags.push('외향적');
   }
 
   return tags;
@@ -95,35 +101,15 @@ export default function BookmarkListScreen({ onBack, onNavigateToJob }: Bookmark
 
     async function load() {
       try {
-          // 실제 API 호출 (엔드포인트/스키마는 서버에 맞게 수정)
-          const res = await api.get('/bookmark');
-          if (!res.data.data) {
-            //const text = await res.text().catch(() => '');
-            throw new Error(`응답 오류(${res.status}) ${res.data.data ?? ''}`);
-          }
-          const data = res.data.data;
-
-          // 서버 응답 → 화면용 구조로 정규화
-          const normalized: BookmarkJob[] = (Array.isArray(data) ? data : []).map((d) => {
-            const item: BookmarkJob = {
-              id: Number(d.id),
-              title: d.title ?? '',
-              location: d.location ?? '',
-              authorName: d.author ?? '',
-              monthlyRent: Number(d.monthlyRent ?? 0),
-              recruitCount: Number(d.recruitCount ?? 0),
-              status: (d.status as RecruitStatus) ?? RecruitStatus.Recruiting,
-              createdAt: d.createdAt ?? new Date().toISOString().slice(0, 10),
-              smoking: d.smoking,
-              lifestyle: d.lifestyle as Lifestyle | undefined,
-              pets: d.pets,
-              snoring: d.snoring,
-              gender: d.gender as Gender ,
-              personality: d.personality as Personality | undefined,
-            };
-            return { ...item, tags: buildTagsFromEnums(item) };
+          const token = getAccessToken();
+          console.log('Access token for bookmarks:', token);
+          const res = await api.get('/bookmark', {
+            headers: { Authorization: `Bearer ${token}` }
           });
-          if (mounted) setBookmarkedJobs(normalized);
+          const data = res.data.data.bookmarks;
+          console.log('Fetched bookmarks:', data);
+          setBookmarkedJobs(data);
+          buildTagsFromEnums(data);
       } catch (e) {
         console.error(e);
         if (mounted) setBookmarkedJobs([]); // 실패 시 빈 배열
@@ -155,13 +141,13 @@ export default function BookmarkListScreen({ onBack, onNavigateToJob }: Bookmark
     );
   };
 
-  const displayedJobs = useMemo(
-    () =>
-      [...bookmarkedJobs].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.bookmarkedAt).getTime()
-      ),
-    [bookmarkedJobs]
-  );
+  // const displayedJobs = useMemo(
+  //   () =>
+  //     [...bookmarkedJobs].sort(
+  //       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  //     ),
+  //   [bookmarkedJobs]
+  // );
 
   return (
     <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
@@ -187,12 +173,12 @@ export default function BookmarkListScreen({ onBack, onNavigateToJob }: Bookmark
 
       <ScrollView style={{ padding: 16 }}>
         {/* 북마크 목록 */}
-        {displayedJobs.length > 0 ? (
+        {bookmarkedJobs.length > 0 ? (
           <View style={{ gap: 16 }}>
-            {displayedJobs.map((job) => (
+            {bookmarkedJobs.map((job) => (
               <TouchableOpacity
-                key={job.id}
-                onPress={() => onNavigateToJob(String(job.id))}
+                key={job.postId}
+                onPress={() => onNavigateToJob(String(job.postId))}
                 activeOpacity={0.7}
               >
                 <Card>
@@ -202,14 +188,14 @@ export default function BookmarkListScreen({ onBack, onNavigateToJob }: Bookmark
                         <Text style={{ fontWeight: '500', fontSize: 14, lineHeight: 20, marginBottom: 4 }}>{job.title}</Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }}>
                           <Ionicons name="location" size={12} color="#6b7280" />
-                          <Text style={{ fontSize: 12, color: '#6b7280' }}>{job.location}</Text>
+                          <Text style={{ fontSize: 12, color: '#6b7280' }}>{job.address}</Text>
                         </View>
                         <Text style={{ fontSize: 12, color: '#6b7280' }}>
-                          작성자: {job.author} • 북마크: {job.bookmarkedAt}
+                          작성자: {job.authorName} • 북마크: {job.createdAt.slice(0, 10)}
                         </Text>
                       </View>
                       <TouchableOpacity
-                        onPress={() => handleRemoveBookmark(job.id)}
+                        onPress={() => handleRemoveBookmark(job.bookmarkId)}
                         style={{
                           padding: 4,
                           backgroundColor: '#fef3e2',
@@ -224,26 +210,26 @@ export default function BookmarkListScreen({ onBack, onNavigateToJob }: Bookmark
                     <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 12, color: '#6b7280' }}>보증금</Text>
-                        <Text style={{ fontSize: 12, fontWeight: '500', marginLeft: 4 }}>{job.deposit}만원</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '500', marginLeft: 4 }}>{job.rentalCostMin}만원</Text>
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 12, color: '#6b7280' }}>월세</Text>
-                        <Text style={{ fontSize: 12, fontWeight: '500', marginLeft: 4 }}>{job.monthlyRent}만원</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '500', marginLeft: 4 }}>{job.monthlyCostMin}만원</Text>
                       </View>
                     </View>
 
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 12 }}>
+                    {/* <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 12 }}>
                       {(job.tags ?? []).map((tag) => (
                         <Badge key={`${job.id}-${tag}`} variant="secondary">
                           {tag}
                         </Badge>
                       ))}
-                    </View>
+                    </View> */}
 
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         <Text style={{ fontSize: 12, color: '#6b7280' }}>👥</Text>
-                        <Text style={{ fontSize: 12, color: '#6b7280' }}>{job.recruitCount}/{job.totalCount}명</Text>
+                        <Text style={{ fontSize: 12, color: '#6b7280' }}>{job.recruitCount}명</Text>
                       </View>
                       <Badge
                         variant={job.status === RecruitStatus.RecruitOver ? 'secondary' : 'default'}
