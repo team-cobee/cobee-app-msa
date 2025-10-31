@@ -239,7 +239,9 @@ const AvatarFallback = ({
   // 지원하기 api 
   const applyForRecruit = async (postId: number) => {
     try {
-      const res = await api.post('/apply', { postId }); 
+      const res = await api.post(`/apply/${postId}`, {
+        headers: { Authorization: `Bearer ${getAccessToken}` }
+      }); 
       const id = res.data?.data?.postId ?? postId;
       setIsApplied(true);
       setShowApplyModal(false);
@@ -279,10 +281,10 @@ const AvatarFallback = ({
   }
 };
 
-const postComment = async (content: string, parentId: number | null) => { 
+const postComment = async (content: string, parentId: number | null, isPrivate:boolean) => { 
   const token = await getAccessToken().catch(() => null);  
-  const res = await api.post(`/posts/${jobId}/comments`, 
-    { postId: jobId, content, parentId },
+  const res = await api.post(`/comments/${jobId}`, 
+    { content, parentId, isPrivate },
     {headers: token ? { Authorization: `Bearer ${token}` } : {}},    
   );  
   console.log(res);
@@ -290,11 +292,12 @@ const postComment = async (content: string, parentId: number | null) => {
 }
 const getAllComments = async (postId : number) => {
   const token = await getAccessToken().catch(() => null);  
-  const res = await api.get(`/posts/${jobId}/comments`, {
+  const res = await api.get(`/comments/${postId}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {}, 
   });
   console.log(res.data.data);
-  setComments(res.data.data);
+  return res.data.data;
+  //setComments(res.data.data);
 }
 
   useEffect(() => {
@@ -305,7 +308,7 @@ const getAllComments = async (postId : number) => {
       try {
         const authInfo = await api.get("/auth");
         const profileInfo = await api.get("/public-profiles");
-        getAllComments(jobId as number);
+        //getAllComments(jobId as number);
         if (cancelled) return;
         setAuthor(authInfo.data?.data ?? null);
         setPublicProfile(profileInfo.data?.data ?? null);
@@ -340,7 +343,9 @@ const getAllComments = async (postId : number) => {
         const data = res.data?.data;
         console.log('Parsed data:', JSON.stringify(data, null, 2));
         setRecruit(data ?? null);
-        setComments(Array.isArray(data?.comments) ? data.comments : []);
+        //getAllComments(jobId);
+        const comments = await getAllComments(jobId);
+        setComments(comments);
       } catch (e) {
         console.error('Error fetching recruit:', e);
         if (!cancelled) Alert.alert("에러", "구인글을 불러오지 못했습니다");
@@ -433,12 +438,12 @@ const getAllComments = async (postId : number) => {
 
   // 원댓글 추가
   const handleAddComment = () => {
-    postComment(newComment, null);
+    postComment(newComment, null, false);
   };
 
   // 대댓글 추가
   const handleAddReply = (parentCommentId: number) => {
-    postComment(newReply,parentCommentId);
+    postComment(newReply,parentCommentId, false);
   };
 
   // 원댓글만 추출
@@ -465,7 +470,7 @@ const getAllComments = async (postId : number) => {
 
   const handleEdit = () => {
     if (!recruit?.postId) return;
-    setShowEditDialog(false); // 모달 닫기
+    //setShowEditDialog(false); // 모달 닫기
   };
 
   const handleDelete = () => {
@@ -718,13 +723,13 @@ const getAllComments = async (postId : number) => {
                 <View style={styles.gridItem}>
                   <Text style={styles.mutedTextSm}>흡연 여부</Text>
                   <Text style={styles.fontMedium}>
-                    {getSmokingText(recruit.preferedSmoking)}
+                    {getSmokingText(recruit.preferredSmoking)}
                   </Text>
                 </View>
                 <View style={styles.gridItem}>
                   <Text style={styles.mutedTextSm}>코골이</Text>
                   <Text style={styles.fontMedium}>
-                    {getSnoringText(recruit.preferedSnoring)}
+                    {getSnoringText(recruit.preferredSnoring)}
                   </Text>
                 </View>
               </View>
@@ -732,7 +737,7 @@ const getAllComments = async (postId : number) => {
                 <View style={styles.gridItem}>
                   <Text style={styles.mutedTextSm}>반려동물</Text>
                   <Text style={styles.fontMedium}>
-                    {getPetText(recruit.preferedHasPet)}
+                    {getPetText(recruit.preferredHasPet)}
                   </Text>
                 </View>
                 <View style={styles.gridItem}></View>
@@ -787,7 +792,7 @@ const getAllComments = async (postId : number) => {
                     ) : (
                       <Avatar style={styles.commentAvatar}>
                         <AvatarFallback style={styles.commentAvatarText}>
-                          {comment.nickname.slice(0, 2)}
+                          {comment.nickname}
                         </AvatarFallback>
                       </Avatar>
                     )}

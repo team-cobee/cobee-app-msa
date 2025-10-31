@@ -137,6 +137,7 @@ export function useFcmToken(userId?: string) {
           // 로그인 후 userId가 있다면 서버에 등록
           if (userId) {
             await registerPushToken({ userId, token: t, platform: 'ANDROID' });
+            console.log('[FCM] Token registered on server for user:', userId);
           }
         } else {
           setError(new Error('FCM 토큰을 가져오지 못했습니다.'));

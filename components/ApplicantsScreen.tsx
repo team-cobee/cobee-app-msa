@@ -63,7 +63,7 @@ export default function ApplicantsScreen({
 
   const getPostTitle = async() => {
     const token = await getAccessToken().catch(() => null);  
-    const res = await api.get(`/recruits/${postId}`,{
+    const res = await api.get(`/recruit/${postId}`,{
       headers: token ? { Authorization: `Bearer ${token}` } : {},       
     }
   )

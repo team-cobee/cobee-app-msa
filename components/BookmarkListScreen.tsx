@@ -10,8 +10,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Snoring, Smoking, Gender, Lifestyle, Personality, Pets, MatchStatus, RecruitStatus } from '@/types/enums';
+import { Gender, Lifestyle, Personality, RecruitStatus } from '@/types/enums';
 import { api } from '@/api/api';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { getAccessToken } from '@/api/tokenStorage';
 
 interface BookmarkListScreenProps {
   onBack: () => void;
@@ -99,11 +101,13 @@ export default function BookmarkListScreen({ onBack, onNavigateToJob }: Bookmark
 
     async function load() {
       try {
-          const res = await api.get('/bookmark');
-          if (!res.data.data) {
-            throw new Error(`응답 오류(${res.status}) ${res.data.data ?? ''}`);
-          }
-          const data = res.data.data;
+          const token = getAccessToken();
+          console.log('Access token for bookmarks:', token);
+          const res = await api.get('/bookmark', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const data = res.data.data.bookmarks;
+          console.log('Fetched bookmarks:', data);
           setBookmarkedJobs(data);
           buildTagsFromEnums(data);
       } catch (e) {
@@ -137,13 +141,13 @@ export default function BookmarkListScreen({ onBack, onNavigateToJob }: Bookmark
     );
   };
 
-  const displayedJobs = useMemo(
-    () =>
-      [...bookmarkedJobs].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.bookmarkedAt).getTime()
-      ),
-    [bookmarkedJobs]
-  );
+  // const displayedJobs = useMemo(
+  //   () =>
+  //     [...bookmarkedJobs].sort(
+  //       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  //     ),
+  //   [bookmarkedJobs]
+  // );
 
   return (
     <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
@@ -169,12 +173,12 @@ export default function BookmarkListScreen({ onBack, onNavigateToJob }: Bookmark
 
       <ScrollView style={{ padding: 16 }}>
         {/* 북마크 목록 */}
-        {displayedJobs.length > 0 ? (
+        {bookmarkedJobs.length > 0 ? (
           <View style={{ gap: 16 }}>
-            {displayedJobs.map((job) => (
+            {bookmarkedJobs.map((job) => (
               <TouchableOpacity
-                key={job.id}
-                onPress={() => onNavigateToJob(String(job.id))}
+                key={job.postId}
+                onPress={() => onNavigateToJob(String(job.postId))}
                 activeOpacity={0.7}
               >
                 <Card>
@@ -184,14 +188,14 @@ export default function BookmarkListScreen({ onBack, onNavigateToJob }: Bookmark
                         <Text style={{ fontWeight: '500', fontSize: 14, lineHeight: 20, marginBottom: 4 }}>{job.title}</Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }}>
                           <Ionicons name="location" size={12} color="#6b7280" />
-                          <Text style={{ fontSize: 12, color: '#6b7280' }}>{job.location}</Text>
+                          <Text style={{ fontSize: 12, color: '#6b7280' }}>{job.address}</Text>
                         </View>
                         <Text style={{ fontSize: 12, color: '#6b7280' }}>
-                          작성자: {job.author} • 북마크: {job.bookmarkedAt}
+                          작성자: {job.authorName} • 북마크: {job.createdAt.slice(0, 10)}
                         </Text>
                       </View>
                       <TouchableOpacity
-                        onPress={() => handleRemoveBookmark(job.id)}
+                        onPress={() => handleRemoveBookmark(job.bookmarkId)}
                         style={{
                           padding: 4,
                           backgroundColor: '#fef3e2',
@@ -206,26 +210,26 @@ export default function BookmarkListScreen({ onBack, onNavigateToJob }: Bookmark
                     <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 12, color: '#6b7280' }}>보증금</Text>
-                        <Text style={{ fontSize: 12, fontWeight: '500', marginLeft: 4 }}>{job.deposit}만원</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '500', marginLeft: 4 }}>{job.rentalCostMin}만원</Text>
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 12, color: '#6b7280' }}>월세</Text>
-                        <Text style={{ fontSize: 12, fontWeight: '500', marginLeft: 4 }}>{job.monthlyRent}만원</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '500', marginLeft: 4 }}>{job.monthlyCostMin}만원</Text>
                       </View>
                     </View>
 
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 12 }}>
+                    {/* <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 12 }}>
                       {(job.tags ?? []).map((tag) => (
                         <Badge key={`${job.id}-${tag}`} variant="secondary">
                           {tag}
                         </Badge>
                       ))}
-                    </View>
+                    </View> */}
 
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         <Text style={{ fontSize: 12, color: '#6b7280' }}>👥</Text>
-                        <Text style={{ fontSize: 12, color: '#6b7280' }}>{job.recruitCount}/{job.totalCount}명</Text>
+                        <Text style={{ fontSize: 12, color: '#6b7280' }}>{job.recruitCount}명</Text>
                       </View>
                       <Badge
                         variant={job.status === RecruitStatus.RecruitOver ? 'secondary' : 'default'}

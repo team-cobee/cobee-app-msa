@@ -93,7 +93,7 @@ export default function App() {
 
   useEffect(() => {
     if (token) {
-      console.log('[Notifications] FCM token issued:', `${token.slice(0, 12)}...`);
+      console.log('[Notifications] FCM token issued:', `${token}`);
     }
   }, [token]);
 
