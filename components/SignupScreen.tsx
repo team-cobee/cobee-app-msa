@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, CardContent, CardHeader } from './ui/card';
-import { Gender, Lifestyle, Personality, Pets, Smoking, Snoring, SocialType } from '@/types/enums';
+import { Gender, Lifestyle, Personality, SocialType } from '@/types/enums';
 
 interface SignupScreenProps {
   onSignup?: () => void;
@@ -49,8 +49,7 @@ type OcrVerifyResponse = {
   success: boolean;
 };
 
-// ===== 추가: 비동기 OCR 타입 & API 함수 (이 파일 안에서만 사용) =====
-type OcrTaskStatus = 'PENDING' | 'SUCCESS' | 'FAILED';
+// ===== 수정: 동기 OCR 응답 타입 (taskId 관련 타입 제거) =====
 type OcrVerificationResponseDto = {
   id : number,
   name?: string;
@@ -64,12 +63,6 @@ type OcrVerificationResponseDto = {
   verificationMessage : string;
   verificationStatus : string;
 };
-type OcrTask = {
-  status: OcrTaskStatus;
-  result: OcrVerificationResponseDto | null;
-  errorMessage?: string | null;
-};
-type OcrStartResponse = { taskId: string };
 
 type createUserPreferencesRequest = {
   preferredGender : Gender,
@@ -86,13 +79,13 @@ type createPublicProfilesRequest = {
   info : string,
   lifestyle : Lifestyle,
   personality : Personality,
-  isSmoking : Smoking,
-  isSnoring : Snoring,
-  hasPet : Pets
+  isSmoking : boolean,
+  isSnoring : boolean,
+  hasPet : boolean
 }
 
 interface form {
-  preferredGender: Gender  | null,
+  preferredGender: Gender | null,
   ageMin: number| null,
   ageMax: number| null,
   lifestyle: Lifestyle | null,
@@ -105,9 +98,9 @@ interface form {
   // 공개 프로필
   myLifestyle: Lifestyle| null,
   myPersonality: Personality| null,
-  mySmokingStatus: Smoking| null,
-  mySnoringStatus: Snoring| null,
-  myPetStatus: Pets| null,
+  mySmokingStatus: boolean| null,
+  mySnoringStatus: boolean| null,
+  myPetStatus: boolean| null,
   info: string| null;
   
   // 신분증 인증
@@ -152,7 +145,7 @@ const INITIAL_FORM: form = {
 export default function SignupScreen({ onSignup, onBack, onComplete }: SignupScreenProps) {
   const [step, setStep] = useState(1);
   const SLIDER_WIDTH = Dimensions.get('window').width - 48; // 좌우 padding 고려해 적당히
-  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // ===== 수정: pollTimerRef 제거 (더 이상 폴링하지 않음) =====
   const [ocrSuccess, setOcrSuccess] = useState<boolean | null>(null);
   const [preferInfo, setPreferInfo] = useState<createUserPreferencesRequest | null>(null);
   const [formData, setFormData] = useState<form>(INITIAL_FORM);
@@ -176,34 +169,19 @@ const personalityOptions = [
   { value: Personality.Extrovert, label: '밖순이' },
 ];
 
-// const smokingOptions = [
-//   { value: Smoking.NotSmoke, label: '비흡연자' },
-//   { value: Smoking.Smoke, label: '흡연자' },
-// ];
-
-// const snoringOptions = [
-//   { value: Snoring.NoSnore, label: '안함' },
-//   { value: Snoring.Snore, label: '코골이함' },
-// ];
-
-// const petOptions = [
-//   { value: Pets.Have, label: '있음' },
-//   { value: Pets.NotHave, label: '없음' },
-// ];
   const smokingOptions = [
-    { value: Smoking.None, label: '비흡연자' },        // None = 흡연 안함
-    { value: Smoking.Impossible, label: '흡연자' },    // Impossible = 흡연 불가능(?)
+    { value: false, label: '비흡연자' },        // None = 흡연 안함
+    { value: true, label: '흡연자' },    // Impossible = 흡연 불가능(?)
   ];
 
   const snoringOptions = [
-    { value: Snoring.None, label: '안함' },           // None = 코골이 안함
-    { value: Snoring.Impossible, label: '코골이함' }, // Impossible = 코골이 불가능(?)
+    { value: false, label: '안함' },           // None = 코골이 안함
+    { value: true, label: '코골이함' }, // Impossible = 코골이 불가능(?)
   ];
 
   const petOptions = [
-    { value: Pets.Possible, label: '있음' },          // Possible = 펫 가능
-    { value: Pets.Impossible, label: '없음' },        // Impossible = 펫 불가능
-    // { value: Pets.None, label: '상관없음' },        // 필요시 추가
+    { value: true, label: '상관없음' },          // Possible = 펫 가능
+    { value: false, label: '불가능' },        // Impossible = 펫 불가능
   ];
 
   useEffect(() => {
@@ -236,25 +214,23 @@ const personalityOptions = [
     }
     )();
 
-    return () => {
-      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-    };
+    // ===== 수정: cleanup에서 pollTimerRef 제거 =====
   }, []);
 
 
 // ===== 재사용 가능한 셀렉트 박스 =====
-function SelectBox<T extends string>({
+function SelectBox<T extends string | boolean>({
   label,
   placeholder,
   value,
-  open,
+  open, 
   setOpen,
   options,
   onSelect,
 }: {
   label: string;
   placeholder: string;
-  value?: string;
+  value: T | null;
   open: boolean;
   setOpen: (v: boolean) => void;
   options: { value: T; label: string }[];
@@ -277,7 +253,7 @@ function SelectBox<T extends string>({
           alignItems: 'center',
         }}
       >
-        <Text style={{ fontSize: 16, color: value ? '#000' : '#9ca3af' }}>
+        <Text style={{ fontSize: 16, color: value !== null && value !== undefined ? '#000' : '#9ca3af' }}>
           {options.find(o => o.value === value)?.label || placeholder}
         </Text>
         <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color="#9ca3af" />
@@ -298,7 +274,7 @@ function SelectBox<T extends string>({
           <ScrollView>
             {options.map(opt => (
               <TouchableOpacity
-                key={opt.value}
+                key={opt.value.toString()} // ?? 
                 onPress={() => {
                   onSelect(opt.value);
                   setOpen(false);
@@ -373,18 +349,21 @@ const makePublicProfile = async (input: createPublicProfilesRequest) => {
   console.log('[PUBLIC] auth header?', !!token); // true 나와야 정상
 };
 
-// 파일 업로드 → taskId 발급
-async function startOcrVerificationMultipart(file: { uri: string; name?: string; type?: string }) {
+// ===== 수정: 동기 방식으로 변경 - 이미지 업로드 시 바로 OCR 결과를 반환 =====
+async function verifyOcr(file: { uri: string; name?: string; type?: string }): Promise<OcrVerificationResponseDto> {
   const token = await getAccessToken().catch(() => null);
   const filename = file.name ?? `id-${Date.now()}.jpg`;
   const mime = file.type ?? 'image/jpeg';
 
-  const form = new FormData();
-  form.append('image', { uri: file.uri, name: filename, type: mime } as any);
+  const image = new FormData();
+  image.append('image', { uri: file.uri, name: filename, type: mime } as any);
+  console.log('[OCR] 업로드용 FormData 준비, 파일명 =', filename);
+  console.log('[OCR] 토큰:', token);
 
-  const res = await api.post<{ message: string; code: string; data: OcrStartResponse }>(
-    '/ocr/verify', // 컨트롤러의 basePath가 /ocr 라고 가정
-    form,
+  // /ocr/verify 엔드포인트에 직접 업로드하고 결과를 기다림
+  const res = await api.post(
+    '/ocr/verify',
+    image,
     {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -393,19 +372,9 @@ async function startOcrVerificationMultipart(file: { uri: string; name?: string;
       },
     }
   );
-  console.log(res.data.data);
-  return res.data.data; // { taskId }
-}
-
-// task 상태 조회
-async function getOcrVerificationStatus(taskId: string) {
-  const token = await getAccessToken().catch(() => null);
-  const res = await api.get<{ message: string; code: string; data: OcrTask }>(
-    `/ocr/verify/status/${taskId}`,
-    { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } }
-  );
-  console.log(res.data.data);
-  return res.data.data;
+  
+  console.log('[OCR] 응답 데이터:', res.data.data);
+  return res.data.data; // OcrVerificationResponseDto 반환
 }
 
 // 최종 서버 인증 상태 확인
@@ -444,11 +413,11 @@ function buildPublicProfilePayload(form: typeof formData): createPublicProfilesR
 
   return {
     info: form.info || '',
-    lifestyle: form.myLifestyle as Lifestyle,           // Lifestyle enum
-    personality: form.myPersonality as Personality,       // Personality enum
-    isSmoking: form.mySmokingStatus as Smoking,       // Smoking enum ✅
-    isSnoring: form.mySnoringStatus as Snoring,       // Snoring enum ✅
-    hasPet: form.myPetStatus as Pets,              // Pets enum ✅
+    lifestyle: form.myLifestyle as Lifestyle,          
+    personality: form.myPersonality as Personality,      
+    isSmoking: form.mySmokingStatus,      
+    isSnoring: form.mySnoringStatus,       
+    hasPet: form.myPetStatus,             
   };
 }
 
@@ -461,6 +430,7 @@ const handleFinishSignup = async () => {
     const prefPayload = buildUserPreferencesPayload(formData);
     console.log(prefPayload);
     await makeUserPreferences(prefPayload);
+    console.log("선호도 저장 완료")
 
     // 2) 공개 프로필 저장
     const profilePayload = buildPublicProfilePayload(formData);
@@ -472,15 +442,14 @@ const handleFinishSignup = async () => {
     onSignup?.();
     onComplete?.();
   } catch (e: any) {
-    Alert.alert('에러', e?.message ?? '저장 중 오류가 발생했습니다.');
+    console.error('[ERROR] 저장 실패:', e.data.data);
+    console.error('[ERROR] 응답 데이터:', e?.data?.message);
+    console.error('[ERROR] 상태 코드:', e?.data?.message);
+   // Alert.alert('에러', e?.response?.data?.message || e?.message ?? '저장 중 오류가 발생했습니다.');
   }
 };
 
-  useEffect(() => {
-  return () => {
-      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-    };
-  }, []);
+  // ===== 수정: pollTimerRef cleanup 제거 =====
 
   const [uploadState, setUploadState] = useState({
     isUploading: false,
@@ -492,20 +461,6 @@ const handleFinishSignup = async () => {
 
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
-
-  // === 기존 ocrVerify 제거/대체: 비동기 작업 시작만 수행 (taskId 획득) ===
-  const ocrVerifyStart = async (file: { uri: string; name?: string; type?: string }) => {
-    try {
-      const data = await startOcrVerificationMultipart(file); 
-      return data.taskId;
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        'OCR 업로드 실패';
-      throw new Error(msg);
-    }
-  };
 
   const handleFileSelect = async () => {
     try {
@@ -540,93 +495,47 @@ const handleFinishSignup = async () => {
     }
   };
 
-  // === 핵심: 업로드 → taskId → 폴링 → SUCCESS 시 데이터 반영/다음 버튼 활성화 ===
+  // ===== 수정: 동기 방식으로 간소화 - 업로드 → 결과 대기 → 데이터 반영 =====
   const processOCR = async (file: { uri: string; name?: string; type?: string }) => {
-  setUploadState({ isUploading: false, isProcessing: true, error: null });
+    setUploadState({ isUploading: false, isProcessing: true, error: null });
 
-  const startedAt = Date.now();
-
-  try {
-    console.log('[OCR] 업로드 시작');
-    const taskId = await ocrVerifyStart(file);
-    if (!taskId) throw new Error('작업 ID를 받지 못했습니다.');
-    console.log('[OCR] 업로드 성공, taskId =', taskId);
-
-    const POLL_MS = 3000;
-    const MAX_ATTEMPTS = 80;
-    let attempts = 0;
-
-    const pollOnce = async () => {
-      attempts += 1;
-      const sinceStartSec = ((Date.now() - startedAt) / 1000).toFixed(1);
-      console.log(`[OCR] 폴링 시도 #${attempts} (${sinceStartSec}s 경과, 간격=${POLL_MS}ms), taskId=${taskId}`);
-
-      const t0 = Date.now();
-      try {
-        const t = await getOcrVerificationStatus(taskId);
-        const dt = Date.now() - t0;
-
-        console.log(`[OCR] 폴링 응답 #${attempts} (${dt}ms) status=${t.status}`,
-          t.status === 'FAILED' ? `, error="${t.errorMessage ?? ''}"` : '',
-          t.status === 'SUCCESS' ? `, resultKeys=${Object.keys(t.result ?? {})}` : ''
-        );
-
-        if (t.status === 'SUCCESS') {
-          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-          pollTimerRef.current = null;
-          setOcrSuccess(Boolean(t.result?.isCompleted));
-          setOcrInfo(t?.result);
-          console.log('[OCR] SUCCESS → 폴링 중단, onOcrSuccess 호출');
-          await onOcrSuccess(t);
-        } else if (t.status === 'FAILED') {
-          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-          pollTimerRef.current = null;
-          console.log('[OCR] FAILED → 폴링 중단');
-          throw new Error(t.errorMessage ?? 'OCR 인증에 실패했습니다.');
-        } else {
-          if (attempts >= MAX_ATTEMPTS) {
-            if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-            pollTimerRef.current = null;
-            console.log('[OCR] MAX_ATTEMPTS 초과 → 폴링 중단');
-            throw new Error('처리가 지연되고 있습니다. 잠시 후 다시 시도해주세요.');
-          }
-        }
-      } catch (err: any) {
-        if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-        pollTimerRef.current = null;
-        console.log(`[OCR] 폴링 오류 #${attempts}:`, err?.message ?? err);
-        throw err;
-      }
-    };
-
-    pollTimerRef.current = setInterval(pollOnce, POLL_MS);
-    console.log('[OCR] 폴링 시작(setInterval)');
-    await pollOnce(); // 즉시 1회 실행 (여기서 PENDING이면 계속 돌아야 함)
-  } catch (err: any) {
-    setUploadState({
-      isUploading: false,
-      isProcessing: false,
-      error: err?.message ?? '인증 처리 중 오류가 발생했습니다.',
-    });
-    console.log('[OCR] 처리 실패:', err?.message ?? err);
-  }
-};
+    try {
+      console.log('[OCR] 업로드 및 처리 시작');
+      
+      // verifyOcr 함수를 호출하면 서버가 OCR 처리를 완료한 후 결과를 반환함
+      const result = await verifyOcr(file);
+      
+      console.log('[OCR] 처리 완료, 결과:', result);
+      
+      // 결과 데이터를 상태에 반영
+      setOcrSuccess(Boolean(result?.isCompleted));
+      setOcrInfo(result);
+      await onOcrSuccess(result);
+      
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.message || err?.message || 'OCR 인증 중 오류가 발생했습니다.';
+      setUploadState({
+        isUploading: false,
+        isProcessing: false,
+        error: errorMessage,
+      });
+      console.log('[OCR] 처리 실패:', errorMessage);
+    }
+  };
 
 
-  // SUCCESS 시 데이터 반영 + 서버 인증 상태 체크
-  const onOcrSuccess = async (task: OcrTask) => {
-    const r = task.result ?? null;
-
+  // ===== 수정: 타입 파라미터 변경 (OcrTask → OcrVerificationResponseDto) =====
+  const onOcrSuccess = async (result: OcrVerificationResponseDto) => {
     setFormData(prev => ({
       ...prev,
       idVerified: true,
-      extractedName: r?.name || '',
-      extractedBirthDate: r?.birthDate || '',
-      extractedGender: r?.gender === 'Male' || r?.gender === '남자'
+      extractedName: result?.name || '',
+      extractedBirthDate: result?.birthDate || '',
+      extractedGender: result?.gender === 'Male' || result?.gender === '남자'
         ? Gender.Male
-        : r?.gender === 'Female' || r?.gender === '여자'
+        : result?.gender === 'Female' || result?.gender === '여자'
         ? Gender.Female
-        : r?.gender === 'None' || r?.gender === '상관없음'
+        : result?.gender === 'None' || result?.gender === '상관없음'
         ? Gender.None
         : null
     }));
@@ -634,8 +543,11 @@ const handleFinishSignup = async () => {
     // 서버 최종 인증 상태 조회 (실패해도 치명적 X)
     try {
       const s = await getOcrStatus();
+      console.log('[OCR] 최종 인증 상태:', s);
       // 필요하면 s.ocrVerified를 어디 저장/표시
-    } catch {}
+    } catch (e) {
+      console.log('[OCR] 최종 인증 상태 조회 실패 (무시)');
+    }
 
     setUploadState({ isUploading: false, isProcessing: false, error: null });
   };
@@ -1209,15 +1121,22 @@ const handleFinishSignup = async () => {
               </TouchableOpacity>
               <TouchableOpacity 
                 onPress={nextStep}
-                disabled={!formData?.smokingPreference || !formData.snoringPreference || !formData.petPreference}
+                disabled={
+                  formData?.smokingPreference === null || 
+                  formData?.snoringPreference === null || 
+                  formData?.petPreference === null
+                }
                 style={{
                   flex: 1,
                   borderRadius: 8,
                   paddingVertical: 16,
                   alignItems: 'center',
-                  backgroundColor: formData?.smokingPreference && formData?.snoringPreference && formData?.petPreference
-                    ? '#E6940C' 
-                    : 'rgba(247, 179, 43, 0.5)'
+                  backgroundColor: 
+                    formData?.smokingPreference !== null && 
+                    formData?.snoringPreference !== null && 
+                    formData?.petPreference !== null
+                      ? '#E6940C' 
+                      : 'rgba(247, 179, 43, 0.5)'
                 }}
               >
                 <Text style={{ fontSize: 16, color: 'white', fontWeight: '600' }}>다음</Text>
@@ -1226,7 +1145,7 @@ const handleFinishSignup = async () => {
           </View>
         );
 
-      case 4:
+  case 4:
   return (
     <View style={{ gap: 24 }}>
       <View style={{ alignItems: 'center' }}>
@@ -1283,7 +1202,7 @@ const handleFinishSignup = async () => {
         <SelectBox
           label="흡연 여부"
           placeholder="선택해주세요"
-          value={formData?.mySmokingStatus as Smoking}
+          value={formData?.mySmokingStatus}
           open={openSmoking}
           setOpen={setOpenSmoking}
           options={smokingOptions}
@@ -1293,7 +1212,7 @@ const handleFinishSignup = async () => {
         <SelectBox
           label="코골이"
           placeholder="선택해주세요"
-          value={formData?.mySnoringStatus as Snoring}
+          value={formData?.mySnoringStatus}
           open={openSnoring}
           setOpen={setOpenSnoring}
           options={snoringOptions}
@@ -1303,7 +1222,7 @@ const handleFinishSignup = async () => {
         <SelectBox
           label="반려동물"
           placeholder="선택해주세요"
-          value={formData?.myPetStatus as Pets}
+          value={formData?.myPetStatus}
           open={openPets}
           setOpen={setOpenPets}
           options={petOptions}
@@ -1348,26 +1267,14 @@ const handleFinishSignup = async () => {
         >
           <Text style={{ fontSize: 16 }}>이전</Text>
         </TouchableOpacity>
-        {/* <TouchableOpacity
-          onPress={nextStep}
-          style={{
-            flex: 1,
-            borderRadius: 8,
-            paddingVertical: 16,
-            alignItems: 'center',
-            backgroundColor: '#E6940C',
-          }}
-        >
-          <Text style={{ fontSize: 16, color: 'white', fontWeight: '600' }}>다음</Text>
-        </TouchableOpacity> */}
         <TouchableOpacity
           onPress={nextStep}
           disabled={
             !formData.myLifestyle ||
             !formData.myPersonality ||
-            !formData.mySmokingStatus ||
-            !formData.mySnoringStatus ||
-            !formData.myPetStatus
+            formData.mySmokingStatus === null ||  // ✅ null 체크로 변경
+            formData.mySnoringStatus === null ||
+            formData.myPetStatus === null
           }
           style={{
             flex: 1,
@@ -1375,13 +1282,13 @@ const handleFinishSignup = async () => {
             paddingVertical: 16,
             alignItems: 'center',
             backgroundColor:
-              formData.myLifestyle &&
-              formData.myPersonality &&
-              formData.mySmokingStatus &&
-              formData.mySnoringStatus &&
-              formData.myPetStatus
-                ? '#E6940C'
-                : 'rgba(247, 179, 43, 0.5)',
+            formData.myLifestyle &&
+            formData.myPersonality &&
+            formData.mySmokingStatus !== null &&  
+            formData.mySnoringStatus !== null &&
+            formData.myPetStatus !== null
+              ? '#E6940C'
+              : 'rgba(247, 179, 43, 0.5)',
           }}
         >
           <Text style={{ fontSize: 16, color: 'white', fontWeight: '600' }}>다음</Text>

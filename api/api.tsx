@@ -25,7 +25,7 @@ export async function authHeader() {
 }
 
 export const api = axios.create({
-  baseURL: DEV_HOST,
+  baseURL: BASE_URL,
   timeout: 10_000,
 });
 

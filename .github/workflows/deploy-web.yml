@@ -1,11 +1,9 @@
-# .github/workflows/deploy-web.yml
 name: Cobee Web Deploy
 
 on:
   push:
     branches: [ main ]
 
-# GitHub Pages (Actions) 방식은 이 권한 두 개가 필수
 permissions:
   contents: read
   pages: write

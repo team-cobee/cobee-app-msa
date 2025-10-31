@@ -26,18 +26,18 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const MapScreen = lazy(() => {
-  // 웹(Web) 플랫폼일 경우: Placeholder 파일을 로드
-  if (Platform.OS === 'web') {
-    // MapScreen.web.tsx 파일을 직접 임포트
-    return import('./components/MapScreen.web'); 
-  }
-  // 그 외(iOS, Android) 플랫폼일 경우: 네이티브 맵 파일을 로드
-  else {
-    // MapScreen.native.tsx 파일을 직접 임포트
-    return import('./components/MapScreen.native');
-  }
-});
+// const MapScreen = lazy(() => {
+//   // 웹(Web) 플랫폼일 경우: Placeholder 파일을 로드
+//   if (Platform.OS === 'web') {
+//     // MapScreen.web.tsx 파일을 직접 임포트
+//     return import('./components/MapScreen.web'); 
+//   }
+//   // 그 외(iOS, Android) 플랫폼일 경우: 네이티브 맵 파일을 로드
+//   else {
+//     // MapScreen.native.tsx 파일을 직접 임포트
+//     return import('./components/MapScreen.native');
+//   }
+// });
 
 // Lazy loaded components for dynamic rendering
 const HomeScreen = lazy(() => import('./components/HomeScreen'));
@@ -46,7 +46,7 @@ const ChatScreen = lazy(() => import('./components/ChatScreen'));
 const ProfileScreen = lazy(() => import('./components/ProfileScreen'));
 const LoginScreen = lazy(() => import('./components/LoginScreen'));
 const SignupScreen = lazy(() => import('./components/SignupScreen'));
-//const MapScreen = lazy(() => import('./components/MapScreen.native'));
+const MapScreen = lazy(() => import('./components/MapScreen.native'));
 const NotificationScreen = lazy(() => import('./components/NotificationScreen'));
 const CreateJobPosting = lazy(() => import('./components/CreateJobPosting'));
 const JobPostingCompleteScreen = lazy(() => import('./components/JobPostingCompleteScreen'));

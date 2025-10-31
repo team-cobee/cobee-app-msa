@@ -28,19 +28,14 @@ export default function MyPostsScreen({ onBack, onNavigateToJob, onNavigateToApp
   const [applicant, setApplicants] = useState<Applicant[]>([])
 
   interface post {
-    postId : number,
-    authorId : number,
-    title : string, 
-    address : string, 
-    createdAt : string,
-    monthlyCostMin : number,
-    monthlyCostMax : number,
-    rentalCostMin : number,
-    rentalCostMax : number,
-    viewd : number,
-    status : RecruitStatus,
-    comments : [],
-    imgUrl? : string[] | "test"
+    postId: number,
+    title: string,
+    address: string,
+    monthlyMinCost: number,
+    rentCostMin: number,
+    applicantCount: number,
+    recruitStatus: RecruitStatus,
+    recruitCount: number
   }
 
  interface Applicant {
@@ -60,7 +55,7 @@ export default function MyPostsScreen({ onBack, onNavigateToJob, onNavigateToApp
   
     const fetchMyInfo = async () => {
       try {
-        const res = await api.get('/recruits/my'); 
+        const res = await api.get('/recruit/my'); 
         if (!cancelled) setMyPosts(res.data?.data);
       } catch (error) {
         console.error(error);
@@ -240,10 +235,10 @@ export default function MyPostsScreen({ onBack, onNavigateToJob, onNavigateToApp
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                       <View>
                         <Text style={{ fontSize: 18, fontWeight: '600', color: '#F7B32B' }}>
-                          월 {post.monthlyCostMin}만원~
+                          월 {post.monthlyMinCost}만원~
                         </Text>
                         <Text style={{ fontSize: 14, color: '#6b7280', marginLeft: 8 }}>
-                          보증금 {post.rentalCostMin}만원~
+                          보증금 {post.rentCostMin}만원~
                         </Text>
                       </View>
                     </View>

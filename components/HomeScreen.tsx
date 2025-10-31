@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gender, Lifestyle, Snoring, Smoking, Personality, Pets, SocialType } from '@/types/enums';
+import { Gender, Lifestyle, Personality,SocialType } from '@/types/enums';
 import { Dimensions } from 'react-native';
 import { AxiosResponse } from "axios";
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -35,9 +35,9 @@ interface RecruitResponse{
   hasRoom: boolean;  // true : 방있음, false : 함께 찾기 
   lifestyle?: Lifestyle;
   personality?: Personality
-  isSmoking?: Smoking
-  isSnoring?: Snoring
-  isPetsAllowed?: Pets
+  isSmoking?: boolean
+  isSnoring?: boolean
+  isPetsAllowed?: boolean
   recruitCount : number
   authorAgeRange : string;   // 20대 초반...
   authorGender : Gender
@@ -97,19 +97,19 @@ export default function HomeScreen({
   const [userInfo, setUserInfo] = useState<user | null>(null);
   const [recommend, setRecommend] = useState<RecommendPost[] | null>([]);
 
-  // useEffect(() => {
-  //   const fetchRecruits = async () => {
-  //     try {
-  //       const res = await api.get('/recruits'); // @GetMapping("")
-  //       setRecruits(res.data?.data); // ApiResponse.success() 안에 data로 내려오는 구조라 가정
-  //     } catch (error) {
-  //       console.error(error);
-  //       Alert.alert('에러', '구인글을 불러오지 못했습니다');
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchRecruits = async () => {
+      try {
+        const res = await api.get('/recruit'); // @GetMapping("")
+        setRecruits(res.data?.data); // ApiResponse.success() 안에 data로 내려오는 구조라 가정
+      } catch (error) {
+        console.error(error);
+        Alert.alert('에러', '구인글을 불러오지 못했습니다');
+      }
+    };
 
-  //   fetchRecruits();
-  // }, []);
+    fetchRecruits();
+  }, []);
 
 
 
@@ -249,7 +249,7 @@ export default function HomeScreen({
     decelerationRate="fast"
     snapToAlignment="center" // 카드가 중앙에 딱 맞게
   >
-    {recommend?.map((job, idx) => {
+    {recruits?.map((job, idx) => {
   const key = `recruit-${job.postId ?? 'noid'}-${idx}`; // ← 고유 key 생성 (id 중복 대비)
   return (
     <TouchableOpacity
